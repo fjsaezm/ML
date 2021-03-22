@@ -1,0 +1,78 @@
+%\documentclass[12pt]{article}
+\documentclass[12pt]{scrartcl}
+\title{ELEC 340 Assignment 3}
+\nonstopmode
+%\usepackage[utf-8]{inputenc}
+\usepackage{graphicx} % Required for including pictures
+\usepackage[figurename=Figure]{caption}
+\usepackage{float}    % For tables and other floats
+\usepackage{verbatim} % For comments and other
+\usepackage{amsmath}  % For math
+\usepackage{amssymb}  % For more math
+\usepackage{fullpage} % Set margins and place page numbers at bottom center
+\usepackage{paralist} % paragraph spacing
+\usepackage{listings} % For source code
+\usepackage{subfig}   % For subfigures
+%\usepackage{physics}  % for simplified dv, and 
+\usepackage{enumitem} % useful for itemization
+\usepackage{siunitx}  % standardization of si units
+
+\usepackage[bitstream-charter]{mathdesign}
+\usepackage[T1]{fontenc}
+
+\usepackage{tikz,bm} % Useful for drawing plots
+%\usepackage{tikz-3dplot}
+\usepackage{circuitikz}
+\usepackage[ruled,vlined]{algorithm2e}
+
+%%% Colours used in field vectors and propagation direction
+\definecolor{mycolor}{rgb}{1,0.2,0.3}
+\definecolor{brightgreen}{rgb}{0.4, 1.0, 0.0}
+\definecolor{britishracinggreen}{rgb}{0.0, 0.26, 0.15}
+\definecolor{cadmiumgreen}{rgb}{0.0, 0.42, 0.24}
+\definecolor{ceruleanblue}{rgb}{0.16, 0.32, 0.75}
+\definecolor{darkelectricblue}{rgb}{0.33, 0.41, 0.47}
+\definecolor{darkpowderblue}{rgb}{0.0, 0.2, 0.6}
+\definecolor{darktangerine}{rgb}{1.0, 0.66, 0.07}
+\definecolor{emerald}{rgb}{0.31, 0.78, 0.47}
+\definecolor{palatinatepurple}{rgb}{0.41, 0.16, 0.38}
+\definecolor{pastelviolet}{rgb}{0.8, 0.6, 0.79}
+\begin{document}
+
+\begin{center}
+	\hrule
+	\vspace{.4cm}
+	{\textbf { \large \scshape{ Práctica 1 - Regresión lineal y descenso según el gradiente}}}
+\end{center}
+{\ Javier Sáez \hspace{\fill} Aprendizaje Automático  \\
+	\hrule
+
+\paragraph*{Problem 1} %\hfill \newline
+
+
+
+\section{Ejercicio 1}
+
+En este ejercicio, se implementará el algoritmo de descenso de gradiente y se aplicará
+este sobre varias funciones con el objetivo de estudiar cómo afecta tanto el punto inicial 
+como la tasa de aprendizaje $\eta$ a la solución que este algoritmo encuentra.
+
+Lo primero que debemos hacer es recordar en qué consiste el algoritmo de descenso de gradiente, veámoslo en pseudocódigo:
+
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwResult{Mínimo local de una función}
+ parametros: \;
+ \While{}{
+  instructions\;
+  \eIf{condition}{
+   instructions1\;
+   instructions2\;
+   }{
+   instructions3\;
+  }
+ }
+ \caption{Descenso de gradiente}
+\end{algorithm}
+\end{document}

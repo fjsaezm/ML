@@ -1,0 +1,4 @@
+*.fls
+texput
+*.fdb_latexmk
+*.aux
