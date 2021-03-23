@@ -26,12 +26,13 @@ def to_numpy(func):
 
   return numpy_func
 
-def print_output_e1(str_f,initial_point,eta,it,w):
+def print_output_e1(str_f,initial_point,eta,it,w,fun):
 	print("Gradiente descendente sobre la función: " +  str_f)
 	print("Punto inicial: {}".format(initial_point))
 	print("Tasa de aprendizaje: {}".format(eta))
 	print ('Numero de iteraciones: ', it)
 	print ('Coordenadas obtenidas: (', w[0], ', ', w[1],')')
+	print('Valor de la función de error en el mínimo : ' , fun(w) )
 
 
 
@@ -84,34 +85,33 @@ print('Ejercicio 1.1\n')
 
 @to_numpy
 def E(u,v):
-    return (u**3 * math.e**(v-2) - 2 * v**2 * math.e**(-u))**2  
+    return (u**3 * (np.exp(v-2)) - 2 * (v**2) * (np.exp(-u)))**2  
 
 #Derivada parcial de E con respecto a u
 def dEu(u,v):
-	return 2 * (u**3 * math.e**(v-2) -2 * v**2 * math.e**(-u)) * (3 * u**2 * math.e**(v-2) + 2 * v**2 * math.e**(-u))
+	return 2 * (u**3 * (np.exp(v-2)) - 2 * (v**2) * (np.exp(-u))) * (3 * (u**2) * (np.exp(v-2)) + 2 * (v**2) * (np.exp(-u)))
     
 #Derivada parcial de E con respecto a v
 def dEv(u,v):
-	return 2 * (u**3 * math.e**(v-2) - 2 * v**2 * math.e**(-u)) * (u**3 * math.e**(v-2) - 4 * v * math.e**(-u))
+	return 2 * ((u**3) * (np.exp(v-2)) - 2 * (v**2) * (np.exp(-u))) * ((u**3) * (np.exp(v-2)) - 4 * v * (np.exp(-u)))
 
 #Gradiente de E
 @to_numpy
 def gradE(u,v):
     return np.array([dEu(u,v), dEv(u,v)])
 
-def gradient_descent(eta,E,gradE,maxIter,error2get,initial_point):
+def gradient_descent(eta,fun,grad_fun,maxIter,error2get,initial_point):
 	iterations = 0
 	w_t = initial_point
 	all_w = []
 	all_w.append(w_t)
 
-	while iterations < maxIter and E(w_t) > error2get:
+	while iterations < maxIter and fun(w_t) > error2get:
 		# All gradient descent in 1 line
-		w_t = w_t - eta*gradE(w_t)
+		w_t = w_t - eta*grad_fun(w_t)
 		all_w.append(w_t)
 		# sum iterations
 		iterations += 1
-	
 
 	return np.array(all_w),w_t, iterations
 
@@ -122,8 +122,7 @@ error2get = 1e-14
 initial_point = np.array([1.0,1.0])
 all_w , w, it = gradient_descent(eta,E,gradE,maxIter,error2get,initial_point)
 
-
-print_output_e1("E(u,v) = (u^3 e^(v-2) - 2v^2 e^(-u))^2",initial_point,eta,it,w)
+print_output_e1("E(u,v) = (u^3 e^(v-2) - 2v^2 e^(-u))^2",initial_point,eta,it,w,E)
 #plot_min_point_e1(E,w)
 
 plot_all_e1(E,w,all_w)

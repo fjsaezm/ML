@@ -24,6 +24,8 @@
 %\usepackage{tikz-3dplot}
 \usepackage{circuitikz}
 \usepackage[ruled,vlined]{algorithm2e}
+\usepackage[utf8]{inputenc}
+
 
 %%% Colours used in field vectors and propagation direction
 \definecolor{mycolor}{rgb}{1,0.2,0.3}
@@ -37,6 +39,35 @@
 \definecolor{emerald}{rgb}{0.31, 0.78, 0.47}
 \definecolor{palatinatepurple}{rgb}{0.41, 0.16, 0.38}
 \definecolor{pastelviolet}{rgb}{0.8, 0.6, 0.79}
+
+%---------- Listings config
+
+
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+
+
 \begin{document}
 
 \begin{center}
@@ -47,32 +78,94 @@
 {\ Javier Sáez \hspace{\fill} Aprendizaje Automático  \\
 	\hrule
 
-\paragraph*{Problem 1} %\hfill \newline
-
-
-
-\section{Ejercicio 1}
+\section*{Ejercicio 1}
 
 En este ejercicio, se implementará el algoritmo de descenso de gradiente y se aplicará
 este sobre varias funciones con el objetivo de estudiar cómo afecta tanto el punto inicial 
-como la tasa de aprendizaje $\eta$ a la solución que este algoritmo encuentra.
+como la tasa de aprendizaje $\eta$ a la solución que este algoritmo encuentra.\\
 
-Lo primero que debemos hacer es recordar en qué consiste el algoritmo de descenso de gradiente, veámoslo en pseudocódigo:
+Lo primero que debemos hacer es recordar en qué consiste el algoritmo de descenso de gradiente,
+ veámoslo en pseudocódigo:\\
 
 
 \begin{algorithm}[H]
 \SetAlgoLined
 \KwResult{Mínimo local de una función}
- parametros: \;
- \While{}{
-  instructions\;
-  \eIf{condition}{
-   instructions1\;
-   instructions2\;
-   }{
-   instructions3\;
-  }
+ parametros: $\eta$, $f$, $max\_iteraciones$,$criterio\_parada$, $punto\_inicial$ \;
+
+ $punto = punto\_inicial$ \;
+ \While{No (Criterio de parada)}{
+     $gradiente \leftarrow \nabla f(punto)$ \;
+     $direccion \leftarrow - gradiente$ \;
+     $punto \leftarrow punto - \eta \cdot direccion$
  }
  \caption{Descenso de gradiente}
-\end{algorithm}
+\end{algorithm}\\
+
+En la implementación en el lenguaje de programación escogido, \emph{python}, se podrá hacer todo el contenido de este bucle while en una única línea.
+Sin embargo, se añadirá contenido extra al cuerpo de la función para que nos devuelva no solo el mínimo, sino también toda la sucesión de puntos
+que se han ido obteniendo así como el número de iteraciones que se han dado. En este caso, consideraremos una iteración claramente como una actualización del punto mínimo
+de la función. \\
+
+\begin{lstlisting}[language=Python]
+    def gradient_descent(eta,fun,grad_fun,maxIter,error2get,initial_point):
+	    iterations = 0
+	    w_t = initial_point
+	    all_w = []
+	    all_w.append(w_t)
+
+	    while iterations < maxIter and fun(w_t) > error2get:
+		    # All gradient descent in 1 line
+		    w_t = w_t - eta*grad_fun(w_t)
+		    all_w.append(w_t)
+		    # sum iterations
+		    iterations += 1
+	
+
+	    return np.array(all_w),w_t, iterations
+\end{lstlisting}\\
+
+
+
+Consideremos ahora la función
+
+$$
+E(u,v) = \left( u^3 e^{(v-2)} - 2v^2 e^{-u}\right)^2.
+$$
+
+\subsection*{Gradiente de $E$ }
+
+Nuestra función $E$ es claramente derivable , así que procedemos a obtener sus derivadas parciales para poder aplicarle el algoritmo. Obtenemos que
+$$
+\frac{\partial E}{\partial u} = 2 \left( u^3 e^{(v-2)} - 2v^2 e^{-u}\right)\left( 3u^2 e^{(v-2)} + 2v^2 e^{-u}\right)
+$$
+y
+$$
+\frac{\partial E}{\partial v} = 2 \left( u^3 e^{(v-2)} - 2v^2 e^{-u}\right) \left( u^3 e^{(v-2)} - 4v e^{-u}\right).
+$$
+
+Tras definir una función para cada una de estas derivadas parciales y una para darnos el gradiente $\nabla E = \left(\frac{\partial E}{\partial u}, \frac{\partial E}{\partial v}\right)$ de $E$ en un punto
+, podemos aplicar el algoritmo. Los parámetros de la ejecución son los siguientes:
+\begin{itemize}
+\item Tasa de aprendizaje $\eta = 0.1$.
+\item Punto inicial $(u,v) = (1,1)$.
+\item Condición de parada: Error $E$ inferior a $10^{-14}$ (esto está programado directamente en la función).
+\item Máximo de iteraciones: prácticamente ilimitado ($10000000000$) para este primer ejercicio.
+\end{itemize}
+
+Tras la obtención del gráfico, se ha programado también una pequeña función que formatea la salida de algunos datos que pueden ser relevantes.
+En particular, dada la propia función en un string, los parámetros del gradiente descendente y los resultados obtenidos del mismo,
+esta función imprimirá estos parámetros, y los resultados obtenidos entre ellos el número de iteraciones y el punto final. Esta función se llama \lstinline{print_output_e1}
+y el resultado sobre este problema es:
+
+\begin{lstlisting}[language=bash]
+    Gradiente descendente sobre la función: E(u,v) = (u^3 e^(v-2) - 2v^2 e^(-u))^2
+    Punto inicial: [1. 1.]
+    Tasa de aprendizaje: 0.1
+    Numero de iteraciones:  10
+    Coordenadas obtenidas: ( 1.1572888496465497 ,  0.9108383657484799 )
+    Valor de la función de error en el mínimo :  3.1139605842768533e-15
+  \end{lstlisting}
+
+
 \end{document}
