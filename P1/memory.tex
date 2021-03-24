@@ -25,6 +25,7 @@
 \usepackage{circuitikz}
 \usepackage[ruled,vlined]{algorithm2e}
 \usepackage[utf8]{inputenc}
+\usepackage{tikz}
 
 
 %%% Colours used in field vectors and propagation direction
@@ -104,7 +105,7 @@ Lo primero que debemos hacer es recordar en qué consiste el algoritmo de descen
      $punto \leftarrow punto - \eta \cdot direccion$
  }
  \caption{Descenso de gradiente}
-\end{algorithm}\\
+\end{algorithm}
 
 En la implementación en el lenguaje de programación escogido, \emph{python}, se podrá hacer todo el contenido de este bucle while en una única línea.
 Sin embargo, se añadirá contenido extra al cuerpo de la función para que nos devuelva no solo el mínimo, sino también toda la sucesión de puntos
@@ -127,7 +128,7 @@ de la función. \\
 	
 
 	    return np.array(all_w),w_t, iterations
-\end{lstlisting}\\
+\end{lstlisting}
 
 
 \subsection*{Apartado 2}
@@ -195,9 +196,9 @@ obteniendo el algoritmo, se puede observar mucho mejor que se encuentra un míni
 \subsection*{Apartado 3}
 
 Vamos a considerar ahora una nueva función. Consideramos $f: \mathbb R^2 \to \mathbb R$ dada por:
-$$
-f(x,y) = (x+2)^2 + 2(y-2)^2 + 2\sin(2\pi x) \sin(2\pi y).
-$$
+\begin{equation}
+f(x,y) = (x+2)^2 + 2(y-2)^2 + 2\sin(2\pi x) \sin(2\pi y). \label{eq:f}
+\end{equation}
 Por ser suma y producto de funciones derivables, es de nuevo una función derivable, cuyo gradiente viene dado por:
 $$
 \nabla f(x,y) = \Big( 2(x+2) + +4 \pi \cos(2 \pi x ) \sin (2 \pi y),\ 4 (y-2) + 4\pi \sin(2 \pi x) \cos (2 \pi y)\Big)
@@ -290,6 +291,37 @@ Como vemos, cada mínimo es diferente según el punto de inicio. Esto es debido 
   \caption{Dependencia del punto inicial en el algoritmo de descenso según el gradiente.}
 \end{figure}
 
-Como se puede observar, la el algoritmo está encontrando mínimos locales, que según el punto en el que hayamos iniciado son diferentes, lo cual nos muestra esta dependencia del punto inicial.
+Como se puede observar, el algoritmo está encontrando mínimos locales, que según el punto en el que hayamos iniciado son diferentes, lo cual nos muestra esta dependencia fuerte del del punto inicial que se utilice para comenzar el algoritmo, ya que el algoritmo
+como sabemos acaba encontrando mínimos locales.
+
+
+\subsection*{Conclusiones}
+
+Terminamos el ejercicio haciendo una pequeña conclusión sobre los resultados obtenidos. Usando la función $f(x,y)$ definida en \eqref{eq:f} , nos ha permitido ver como partiendo desde un mismo punto y usando diferentes tasas de aprendizaje $\eta$, los mínimos que se obtienen
+pueden ser radicalmente distintos. Esto es debido a que el cambio que hacemos en el punto depende de esta tasa de aprendizaje y si esta crece, el salto que da el punto en cada iteración puede hacer que el algoritmo vaya \emph{saltando} entre diferentes mínimos locales.
+
+Además de eso, hay que comentar que el punto inicial es también muy relevante en la búsqueda del mínimo global, pues dependiendo de dónde comencemos, podemos quedarnos atrapados en un mínimo local y que nuestro algoritmo no encuente el mínimo global. Aunque ya hemos visto un ejemplo claro
+con la función $f(x,y)$, podemos ver un ejemplo mucho más sencillo de que esto puede pasar incluso con funciones $f:\mathbb R \to  \mathbb R$, como en el siguiente ejemplo:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.8]
+
+  \definecolor{xdxdff}{rgb}{0.49019607843137253,0.49019607843137253,1}
+  \draw[step=1cm,gray,very thin] (-1.99,-0.5) grid (3.99,0.5);
+  
+\draw [fill=xdxdff] (-1,0) circle (2.5pt);
+\draw[color=xdxdff] (-1.3,-0.3) node {$A$};
+\draw [fill=xdxdff] (3,0) circle (2.5pt);
+\draw[color=xdxdff] (3.3,-0.3) node {$B$};
+  \draw[scale=1, domain=-1.1:3.2, smooth, variable=\x, red] plot ({\x}, {(\x)^(4) - 5*(\x)^(3) + 5*(\x)^(2) +5*(\x) -6 });
+\end{tikzpicture}
+\caption{Dos mínimos locales en $f(x) = x^4 - 5 x^3 + 5 x^2 + 5 x - 6 $}
+\end{figure}
+
+Vemos que tenemos dos mínimos locales y uno global, pero si nuestro $\eta$ no es suficientemente grande, empezando por los puntos marcados $A$ y $B$, podríamos obtener como puntos mínimos dos diferentes y en este caso uno sería el correcto (al que llegamos desde $A$) y el otro no.
+
+Por estos dos motivos principales, concluimos que la verdadera dificultad de encontrar el mínimo global está en encontrar un punto inicial adecuado así como una tasa de aprendizaje que no sea ni demasiado grande y nos haga salirnos de esos mínimos, ni demasiado pequeña y nos fuerce
+a realizar un número de iteraciones muy grande para encontrar ese mínimo global.
 
 \end{document}

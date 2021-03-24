@@ -11,6 +11,10 @@ import pandas as pd
 
 np.random.seed(1)
 
+# Constants for the data
+label5 = 1
+label1 = -1
+
 # Auxiliar functions to help with the exercises
 
 def wait():
@@ -22,6 +26,28 @@ def to_numpy(func):
     return func(*w)
 
   return numpy_func
+
+
+# Funcion para leer los datos
+def readData(file_x, file_y):
+	# Leemos los ficheros	
+	datax = np.load(file_x)
+	datay = np.load(file_y)
+	y = []
+	x = []	
+	# Solo guardamos los datos cuya clase sea la 1 o la 5
+	for i in range(0,datay.size):
+		if datay[i] == 5 or datay[i] == 1:
+			if datay[i] == 5:
+				y.append(label5)
+			else:
+				y.append(label1)
+			x.append(np.array([1, datax[i][0], datax[i][1]]))
+			
+	x = np.array(x, np.float64)
+	y = np.array(y, np.float64)
+	
+	return x, y
 
 
 def gradient_descent(eta,E,gradE,maxIter,error2get,initial_point):
@@ -45,29 +71,6 @@ def gradient_descent(eta,E,gradE,maxIter,error2get,initial_point):
 print('EJERCICIO SOBRE REGRESION LINEAL\n')
 print('Ejercicio 2\n')
 
-label5 = 1
-label1 = -1
-
-# Funcion para leer los datos
-def readData(file_x, file_y):
-	# Leemos los ficheros	
-	datax = np.load(file_x)
-	datay = np.load(file_y)
-	y = []
-	x = []	
-	# Solo guardamos los datos cuya clase sea la 1 o la 5
-	for i in range(0,datay.size):
-		if datay[i] == 5 or datay[i] == 1:
-			if datay[i] == 5:
-				y.append(label5)
-			else:
-				y.append(label1)
-			x.append(np.array([1, datax[i][0], datax[i][1]]))
-			
-	x = np.array(x, np.float64)
-	y = np.array(y, np.float64)
-	
-	return x, y
 
 # Funcion para calcular el error
 def MSE(x,y,w):
