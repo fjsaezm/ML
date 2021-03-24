@@ -40,6 +40,10 @@
 \definecolor{palatinatepurple}{rgb}{0.41, 0.16, 0.38}
 \definecolor{pastelviolet}{rgb}{0.8, 0.6, 0.79}
 
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{float}
+
 %---------- Listings config
 
 
@@ -126,14 +130,13 @@ de la función. \\
 \end{lstlisting}\\
 
 
-
+\subsection*{Apartado 2}
 Consideremos ahora la función
 
 $$
 E(u,v) = \left( u^3 e^{(v-2)} - 2v^2 e^{-u}\right)^2.
 $$
 
-\subsection*{Gradiente de $E$ }
 
 Nuestra función $E$ es claramente derivable , así que procedemos a obtener sus derivadas parciales para poder aplicarle el algoritmo. Obtenemos que
 $$
@@ -165,7 +168,128 @@ y el resultado sobre este problema es:
     Numero de iteraciones:  10
     Coordenadas obtenidas: ( 1.1572888496465497 ,  0.9108383657484799 )
     Valor de la función de error en el mínimo :  3.1139605842768533e-15
-  \end{lstlisting}
+\end{lstlisting}
 
+Donde podemos ver las \textbf{iteraciones} que tarda el algoritmo en obtener por primera vez un valor de $E(u,v)$ por debajo de lo pedido, y además también
+se observan las \textbf{coordenadas} en las que esto ocurre. Veamos cuál es la salida de dibujar la función y el mínimo por pantalla:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{media/E1-1.pdf}
+  \caption{Mínimo local de la función}
+\end{figure}
+
+En este caso, el símbolo de estrella que simboliza el mínimo es muy difícilmente visible en el centro de la imagen. Esto es debido al rango dado para los ejes por defecto en el dibujo.
+Vamos a dibujar ahora todos los puntos que ha ido obteniendo el algoritmo de descenso por el gradiente (para esto hemos devuelto una variable más en el código de la función) para ver cómo se ha ido buscando 
+el mínimo de la función. El resultado es el siguiente:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{media/E1-1-all.pdf}
+  \caption{Mirada cercana al mínimo de la función}
+\end{figure}
+
+En esta imagen, obtenida usando el mismo código que la anterior salvo que el rango de dibujado de la superficie es únicamente el máximo de las coordenadas de los puntos que ha ido
+obteniendo el algoritmo, se puede observar mucho mejor que se encuentra un mínimo local y como las iteraciones van buscando ese mínimo.
+
+\subsection*{Apartado 3}
+
+Vamos a considerar ahora una nueva función. Consideramos $f: \mathbb R^2 \to \mathbb R$ dada por:
+$$
+f(x,y) = (x+2)^2 + 2(y-2)^2 + 2\sin(2\pi x) \sin(2\pi y).
+$$
+Por ser suma y producto de funciones derivables, es de nuevo una función derivable, cuyo gradiente viene dado por:
+$$
+\nabla f(x,y) = \Big( 2(x+2) + +4 \pi \cos(2 \pi x ) \sin (2 \pi y),\ 4 (y-2) + 4\pi \sin(2 \pi x) \cos (2 \pi y)\Big)
+$$
+
+La implementación de esta función en \emph{python} es la siguiente:\\
+
+\begin{lstlisting}[language=Python]
+  def f(x,y):
+	  return (x + 2)**2 + 2*(y - 2)**2 + 2 * np.sin(2 * np.pi * x) * np.sin(2 * np.pi * y)
+
+  def dfx(x,y):
+	  return 2 * (x+2) + 4 * np.pi * np.cos(2* np.pi * x) * np.sin(2* np.pi * y)
+
+  def dfy(x,y):
+	  return 4 * (y-2) + 4 * np.pi * np.sin(2 * np.pi * x) * np.cos(2 * np.pi * y) 
+\end{lstlisting}
+
+
+Una vez implementado, volvemos a ejecutar el algoritmo de descenso según el gradiente en esta función. Esta vez, los parámetros son los siguientes:
+\begin{itemize}
+\item Punto inicial $(-1,1)$.
+\item Tasa de aprendizaje $\eta = 0.01$.
+\item Máximo de iteraciones $50$.
+\item En este caso, suprimimos la condición del error a obtener, simplemente indicando que el error sea \lstinline{-math.inf}, y que se
+realicen así las $50$ iteraciones.
+\end{itemize}
+
+El resultado de la ejecución es el siguiente:
+
+\begin{lstlisting}[language=bash]
+Gradiente descendente sobre la función: f(x,y) = (x+2)^2 + 2(y-2)^2 + 2 sin(2pi x) sin(2pi y)
+Punto inicial: [-1.  1.]
+Tasa de aprendizaje: 0.01
+Numero de iteraciones:  50
+Coordenadas obtenidas: ( -1.269064351751895 ,  1.2867208738332965 )
+Valor de la función de error en el mínimo :  -0.3812494974381
+\end{lstlisting}
+
+Podemos ver el gráfico que nos genera la función utilizada en el ejercicio anterior para ver cómo desciende el valor de la función con las iteraciones.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{media/E1-2-all-moved.pdf}
+  \caption{Iteraciones en búsqueda del mínimo en $f(x,y)$ con $\eta = 0.01$.}
+\end{figure}
+
+Vemos como, igual que en el caso anterior, se encuentra el mínimo local en pocas iteraciones. Vamos a volver a repetir el experimento pero ahora usando $\eta = 0.1$, lo cual supone un cambio bastante grande. El resultado es el siguiente:
+
+\begin{lstlisting}[language=bash]
+Gradiente descendente sobre la función: f(x,y) = (x+2)^2 + 2(y-2)^2 + 2 sin(2pi x) sin(2pi y)
+Punto inicial: [-1.  1.]
+Tasa de aprendizaje: 0.1
+Numero de iteraciones:  50
+Coordenadas obtenidas: ( -2.9604132205400098 ,  0.5733549488050332 )
+Valor de la función de error en el mínimo :  4.774050376444264
+\end{lstlisting}
+
+Se puede ya observar como el valor encontrado esta vez es muy diferente, además de ser claramente superior en su valor de $f$. 
+Esto es debido a que al ser la tasa de aprendizaje $\eta$ mucho mayor, los saltos que se dan en la dirección opuesta a la del gradiente son de gran tamaño y se salta en la función a sitios en los que los mínimos son
+diferentes que en el punto inicial, y el gradiente puede tener además una dirección completamente diferente a la que tenía en el punto anterior, por lo que la dirección de la nueva iteración puede cambiar mucho de nuevo. Vemos el resultado de todos los saltos que
+da el algoritmo de descenso según el gradiente:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{media/E1-2-loweta-all.pdf}
+  \caption{Iteraciones en búsqueda del mínimo en $f(x,y)$ con $\eta = 0.1$.}
+\end{figure}
+
+Vamos a ver qué ocurre cuando tomamos varios puntos diferentes y ejecutamos el algoritmo con $\eta = 0.01$, para tratar de que los saltos de dirección no sean muy grandes. Vamos a generar una tabla con el mínimo obtenido de cada uno de los siguientes puntos:
+$(-0.5,-0.5),(1,1),(2.1,-2.1),(-3,3),(-2,2)$ y veamos qué valores alcanzan desde cada uno como mínimos locales.
+
+\begin{table}[]
+  \begin{tabular}{llll}
+  Punto inicial   & Mínimo $(x,y)$ contrado       & Imagen en el mínimo $f(x,y)$ & Iteraciones \\
+  {[}-0.5  0.5{]} & {[}-0.78365509  0.81314011{]} & 2.4931912832664618           & 50          \\
+  {[}1. 1.{]}     & {[}0.67743878 1.29046913{]}   & 6.4375695988659185           & 50          \\
+  {[} 2.1 -2.1{]} & {[} 0.14880583 -0.0960677 {]} & 12.490971442685037           & 50          \\
+  {[}-3.  3.{]}   & {[}-2.73093565  2.71327913{]} & -0.38124949743809955         & 50          \\
+  {[}-2.  2.{]}   & {[}-2.  2.{]}                 & -4.799231304517944e-31       & 50         
+  \end{tabular}
+\end{table}
+
+
+Como vemos, cada mínimo es diferente según el punto de inicio. Esto es debido a que el mínimo local encontrado depende del punto inicial. Podemos ver los diferentes mínimos encontrados en la siguiente imagen generada:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{media/E1-2-minimums-moved.pdf}
+  \caption{Dependencia del punto inicial en el algoritmo de descenso según el gradiente.}
+\end{figure}
+
+Como se puede observar, la el algoritmo está encontrando mínimos locales, que según el punto en el que hayamos iniciado son diferentes, lo cual nos muestra esta dependencia del punto inicial.
 
 \end{document}

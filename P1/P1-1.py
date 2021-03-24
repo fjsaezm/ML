@@ -14,6 +14,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 np.random.seed(1)
 
+
 # Auxiliar functions to help with the exercises
 
 def wait():
@@ -36,7 +37,7 @@ def print_output_e1(str_f,initial_point,eta,it,w,fun):
 
 
 
-def plot_min_point_e1(fun,min_point_arg):
+def plot_min_point_e1(fun,min_point_arg,name="media/fail.pgf"):
 	x = np.linspace(-30, 30, 50)
 	y = np.linspace(-30, 30, 50)
 	X, Y = np.meshgrid(x, y)
@@ -53,9 +54,11 @@ def plot_min_point_e1(fun,min_point_arg):
 	ax.set_ylabel('v')
 	ax.set_zlabel('E(u,v)')
 
+	# Next line was used in development to create the memory
+	#plt.savefig(name)
 	plt.show()
 
-def plot_all_e1(fun,min_point_arg,all_points):
+def plot_all_e1(fun,min_point_arg,all_points,name="media/fail.pdf"):
 	
 	f_s = np.array([fun(p) for p in all_points ])
 	#x = np.linspace(-30, 30, 50)
@@ -77,12 +80,12 @@ def plot_all_e1(fun,min_point_arg,all_points):
 	ax.set_ylabel('v')
 	ax.set_zlabel('E(u,v)')
 
+	# Next line was used in development to create the memory
+	#plt.savefig(name)
 	plt.show()
 
 
-print('EJERCICIO SOBRE LA BUSQUEDA ITERATIVA DE OPTIMOS\n')
-print('Ejercicio 1.1\n')
-
+# Error function for exercise 1.1
 @to_numpy
 def E(u,v):
     return (u**3 * (np.exp(v-2)) - 2 * (v**2) * (np.exp(-u)))**2  
@@ -100,6 +103,23 @@ def dEv(u,v):
 def gradE(u,v):
     return np.array([dEu(u,v), dEv(u,v)])
 
+@to_numpy
+# Function for exercise 1.2
+def f(x,y):
+	return (x + 2)**2 + 2*(y - 2)**2 + 2 * np.sin(2 * np.pi * x) * np.sin(2 * np.pi * y)
+# Partial respect to x
+def dfx(x,y):
+	return 2 * (x+2) + 4 * np.pi * np.cos(2* np.pi * x) * np.sin(2* np.pi * y)
+# Partial respect to u
+def dfy(x,y):
+	return 4 * (y-2) + 4 * np.pi * np.sin(2 * np.pi * x) * np.cos(2 * np.pi * y) 
+
+# Gradient of the function for exercise 1.2
+@to_numpy
+def grad_f(x,y):
+    return np.array([dfx(x,y), dfy(x,y)])
+
+#Function that implements the gradient descent algorithm
 def gradient_descent(eta,fun,grad_fun,maxIter,error2get,initial_point):
 	iterations = 0
 	w_t = initial_point
@@ -116,6 +136,11 @@ def gradient_descent(eta,fun,grad_fun,maxIter,error2get,initial_point):
 	return np.array(all_w),w_t, iterations
 
 
+
+print('EJERCICIO SOBRE LA BUSQUEDA ITERATIVA DE OPTIMOS\n')
+print('Ejercicio 1.1\n')
+
+
 eta = 0.1
 maxIter = 10000000000
 error2get = 1e-14
@@ -123,27 +148,13 @@ initial_point = np.array([1.0,1.0])
 all_w , w, it = gradient_descent(eta,E,gradE,maxIter,error2get,initial_point)
 
 print_output_e1("E(u,v) = (u^3 e^(v-2) - 2v^2 e^(-u))^2",initial_point,eta,it,w,E)
-#plot_min_point_e1(E,w)
-
-plot_all_e1(E,w,all_w)
+plot_min_point_e1(E,w,"media/E1-1.pdf")
 wait()
 
-
-
-@to_numpy
-def f(x,y):
-	return (x + 2)**2 + 2*(y - 2)**2 + 2 * np.sin(2 * np.pi * x) * np.sin(2 * np.pi * y)
-
-def dfx(x,y):
-	return 2 * (x+2) + 4 * np.pi * np.cos(2* np.pi * x) * np.sin(2* np.pi * y)
-
-def dfy(x,y):
-	return 4 * (y-2) + 4 * np.pi * np.sin(2 * np.pi * x) * np.cos(2 * np.pi * y) 
-
-@to_numpy
-def grad_f(x,y):
-    return np.array([dfx(x,y), dfy(x,y)])
-
+print("\n")
+print("Dibujo de todos los puntos que el algoritmo ha ido considerando en la búsqueda del mínimo")
+plot_all_e1(E,w,all_w,"media/E1-1-all.pdf")
+wait()
 
 print("\n")
 print("Ejercicio 1.2.")
@@ -152,27 +163,41 @@ eta = 0.01
 maxIter = 50
 error2get = 1e-14
 initial_point = np.array([-1.0,1.0])
-all_w ,w, it = gradient_descent(eta,f,grad_f,maxIter,error2get,initial_point)
+# Here we set error to -inf to let the algorithm converge for the 50 iterations
+all_w ,w, it = gradient_descent(eta,f,grad_f,maxIter,-math.inf,initial_point)
 
-print_output_e1("f(x,y) = (x+2)^2 + 2(y-2)^2 + 2 cos(2pi x) cos(2pi y)",initial_point,eta,it,w)
-plot_min_point_e1(f,w)
+print_output_e1("f(x,y) = (x+2)^2 + 2(y-2)^2 + 2 sin(2pi x) sin(2pi y)",initial_point,eta,it,w,f)
+#plot_min_point_e1(f,w)
+plot_all_e1(f,w,all_w,"media/E1-2-all.pdf")
 wait()
 
 eta = 0.1
-all_w ,w, it = gradient_descent(eta,f,grad_f,maxIter,error2get,initial_point)
-print_output_e1("f(x,y) = (x+2)^2 + 2(y-2)^2 + 2 cos(2pi x) cos(2pi y)",initial_point,eta,it,w)
-plot_min_point_e1(f,w)
+all_w ,w, it = gradient_descent(eta,f,grad_f,maxIter,-math.inf,initial_point)
+print_output_e1("f(x,y) = (x+2)^2 + 2(y-2)^2 + 2 sin(2pi x) sin(2pi y)",initial_point,eta,it,w,f)
+#plot_min_point_e1(f,w)
+plot_all_e1(f,w,all_w,"media/E1-2-loweta-all.pdf")
 wait()
 
-
+print("\n")
+print("Ejercicio 1.2,b) Tabla de valores ")
 starting_points = np.array([[-0.5,0.5],[1.0,1.0],[2.1,-2.1],[-3.0,3.0],[-2.0,2.0]])
 data = {}
+
+eta = 0.01
 for s in starting_points:
-	_,w,it = gradient_descent(eta,f,grad_f,maxIter,error2get,s)
+	_,w,it = gradient_descent(eta,f,grad_f,maxIter,-math.inf,s)
 	data[str(s)] = {'(x,y)':w, 'f(w)':f(w),'iterations':it}
 	#print("{} \t - \t {} \t - \t {}".format(s,w,f(w)))
 	
 df = pd.DataFrame.from_dict(data,orient='index')
+
+# Used to save table to csv
+#df.to_csv("ej1-2.csv",sep=',')
+
+
+points = np.array([[p[0],p[1]] for p in df['(x,y)']])
+
+plot_all_e1(f,w,points,"media/E1-2-minimums.pdf")
 
 print(df)
 
