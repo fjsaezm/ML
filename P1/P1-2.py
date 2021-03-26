@@ -50,21 +50,6 @@ def readData(file_x, file_y):
 	return x, y
 
 
-def gradient_descent(eta,E,gradE,maxIter,error2get,initial_point):
-	iterations = 0
-	w_t = initial_point
-	all_w = []
-	all_w.append(w_t)
-
-	while iterations < maxIter and E(w_t) > error2get:
-		# All gradient descent in 1 line
-		w_t = w_t - eta*gradE(w_t)
-		all_w.append(w_t)
-		# sum iterations
-		iterations += 1
-	
-
-	return np.array(all_w),w_t, iterations
 
 
 
@@ -74,12 +59,44 @@ print('Ejercicio 2\n')
 
 # Funcion para calcular el error
 def MSE(x,y,w):
-    return  ((np.matmul(x,w) - y)**2).mean(axis = ax)
+    return  ((x.dot(w) - y)**2).mean(axis = ax)
 
-# Gradiente Descendente Estocastico
-#def sgd(?):
-#    #
-#    return w
+def dMSE(x,w,y):
+	return 2*(x.T.dot(x.dot(w) -y ))/len(x)
+
+# Stochastic Gradient Descent
+def sgd(x,y,eta=0.01,max_iterations = 500,batch_size = 32):
+
+	# Initialize w
+	w = np.zeros((x.shape[1],1))
+	all_w = [w]
+
+	# Create the index for selecting the batches
+	index = np.random.permutation(np.arange(len(x)))
+	current_index_pos = 0
+
+	for i in range(max_iterations):
+
+		# Select the index that will be used
+		iteration_index = index[current_index_pos : current_index_pos + batch_size]
+		current_index_pos += batch_size
+
+		# Update w and all_w
+		w = w - eta*dMSE(x[iteration_index,:], y[iteration_index],w)
+		all_w += [w]
+
+		# Re-do the index if we have used all the data
+		if current_pos > len(x):
+			index = np.random.permutation(np.arange(len(x)))
+			current_index_pos = 0
+
+	return all_w, w
+
+
+
+
+
+   return w
 
 # Pseudoinverse xT = (x^T x)^-1 x^T 
 def pseudoinverse(x,y):
