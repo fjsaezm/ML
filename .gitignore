@@ -2,3 +2,4 @@
 texput
 *.fdb_latexmk
 *.aux
+*.log
