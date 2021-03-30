@@ -193,6 +193,16 @@ el mínimo de la función. El resultado es el siguiente:
 En esta imagen, obtenida usando el mismo código que la anterior salvo que el rango de dibujado de la superficie es únicamente el máximo de las coordenadas de los puntos que ha ido
 obteniendo el algoritmo, se puede observar mucho mejor que se encuentra un mínimo local y como las iteraciones van buscando ese mínimo.
 
+Se puede además observar usando la función \lstinline{plot_fun_evolution} cómo evoluciona el valor 
+de la función $E(u,v)$ con las iteraciones. El resultado es el siguiente:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{media/f_evolution_e1-1.pdf}
+  \caption{Valor de $E(u,v)$ en cada iteración.}
+\end{figure}
+
+
 \subsection*{Apartado 3}
 
 Vamos a considerar ahora una nueva función. Consideramos $f: \mathbb R^2 \to \mathbb R$ dada por:
@@ -246,7 +256,17 @@ Podemos ver el gráfico que nos genera la función utilizada en el ejercicio ant
   \caption{Iteraciones en búsqueda del mínimo en $f(x,y)$ con $\eta = 0.01$.}
 \end{figure}
 
-Vemos como, igual que en el caso anterior, se encuentra el mínimo local en pocas iteraciones. Vamos a volver a repetir el experimento pero ahora usando $\eta = 0.1$, lo cual supone un cambio bastante grande. El resultado es el siguiente:
+Vemos como, igual que en el caso anterior, se encuentra el mínimo local en pocas iteraciones. Podemos ver cómo ha descendido la función según las iteraciones:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{media/f_evolution_e1-2-001.pdf}
+  \caption{Valor de $f(x,y)$ en cada iteración con $\eta = 0.01$.}
+\end{figure}
+
+Podemos ver cómo se estabiliza rápidamente (unas $4$ iteraciones) y luego se mantiene en un error muy similar gracias al pequeño valor de $\eta$.
+
+Vamos a volver a repetir el experimento pero ahora usando $\eta = 0.1$, lo cual supone un cambio bastante grande. El resultado es el siguiente:
 
 \begin{lstlisting}[language=bash]
 Gradiente descendente sobre la función: f(x,y) = (x+2)^2 + 2(y-2)^2 + 2 sin(2pi x) sin(2pi y)
@@ -268,10 +288,18 @@ da el algoritmo de descenso según el gradiente:
   \caption{Iteraciones en búsqueda del mínimo en $f(x,y)$ con $\eta = 0.1$.}
 \end{figure}
 
+De hecho, si nos fijamos en qué valores toma la función en las iteraciones, vemos que no se estabiliza al ser el $\eta$ tan grande:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.7]{media/f_evolution_e1-2-01.pdf}
+  \caption{Valor de $f(x,y)$ en cada iteración con $\eta = 0.1$.}
+\end{figure}
+
 Vamos a ver qué ocurre cuando tomamos varios puntos diferentes y ejecutamos el algoritmo con $\eta = 0.01$, para tratar de que los saltos de dirección no sean muy grandes. Vamos a generar una tabla con el mínimo obtenido de cada uno de los siguientes puntos:
 $(-0.5,-0.5),(1,1),(2.1,-2.1),(-3,3),(-2,2)$ y veamos qué valores alcanzan desde cada uno como mínimos locales.
 
-\begin{table}[]
+\begin{table}[H]
   \begin{tabular}{llll}
   Punto inicial   & Mínimo $(x,y)$ contrado       & Imagen en el mínimo $f(x,y)$ & Iteraciones \\
   {[}-0.5  0.5{]} & {[}-0.78365509  0.81314011{]} & 2.4931912832664618           & 50          \\
@@ -290,6 +318,7 @@ Como vemos, cada mínimo es diferente según el punto de inicio. Esto es debido 
   \includegraphics[scale=0.7]{media/E1-2-minimums-moved.pdf}
   \caption{Dependencia del punto inicial en el algoritmo de descenso según el gradiente.}
 \end{figure}
+
 
 Como se puede observar, el algoritmo está encontrando mínimos locales, que según el punto en el que hayamos iniciado son diferentes, lo cual nos muestra esta dependencia fuerte del del punto inicial que se utilice para comenzar el algoritmo, ya que el algoritmo
 como sabemos acaba encontrando mínimos locales.

@@ -14,6 +14,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 np.random.seed(1)
 
+print("\U0001F618")
 
 # Auxiliar functions to help with the exercises
 
@@ -37,7 +38,7 @@ def print_output_e1(str_f,initial_point,eta,it,w,fun):
 
 
 
-def plot_min_point_e1(fun,min_point_arg,name="media/fail.pgf"):
+def plot_min_point_e1(fun,min_point_arg,v1_title,v2_title,f_title,name="media/fail.pgf"):
 	x = np.linspace(-30, 30, 50)
 	y = np.linspace(-30, 30, 50)
 	X, Y = np.meshgrid(x, y)
@@ -50,15 +51,15 @@ def plot_min_point_e1(fun,min_point_arg,name="media/fail.pgf"):
 	min_point_ = min_point[:, np.newaxis]
 	ax.plot(min_point_[0], min_point_[1], fun(min_point), 'r*', markersize=10)
 	#ax.set(title='Ejercicio 1.1. Función sobre la que se calcula el descenso de gradiente')
-	ax.set_xlabel('u')
-	ax.set_ylabel('v')
-	ax.set_zlabel('E(u,v)')
+	ax.set_xlabel(v1_title)
+	ax.set_ylabel(v2_title)
+	ax.set_zlabel(f_title)
 
 	# Next line was used in development to create the memory
 	#plt.savefig(name)
 	plt.show()
 
-def plot_all_e1(fun,min_point_arg,all_points,name="media/fail.pdf"):
+def plot_all_e1(fun,min_point_arg,all_points,v1_title,v2_title,f_title,name="media/fail.pdf"):
 	
 	f_s = np.array([fun(p) for p in all_points ])
 	#x = np.linspace(-30, 30, 50)
@@ -73,16 +74,34 @@ def plot_all_e1(fun,min_point_arg,all_points,name="media/fail.pdf"):
 							cstride=1, cmap='jet',alpha=0.2)
 	min_point = np.array([w[0],w[1]])
 	min_point_ = min_point[:, np.newaxis]
-	ax.plot(all_points[:,0], all_points[:,1],f_s,'g+',markersize=10)
+	#ax.plot(all_points[:,0], all_points[:,1],f_s,'g',markersize=10)
+	ax.scatter(all_points[:,0], all_points[:,1],f_s,'g')
 	ax.plot(min_point_[0], min_point_[1], fun(min_point), 'r*', markersize=10)
 	#ax.set(title='Ejercicio 1.1. Función sobre la que se calcula el descenso de gradiente')
-	ax.set_xlabel('u')
-	ax.set_ylabel('v')
-	ax.set_zlabel('E(u,v)')
+	ax.set_xlabel(v1_title)
+	ax.set_ylabel(v2_title)
+	ax.set_zlabel(f_title)
 
 	# Next line was used in development to create the memory
 	#plt.savefig(name)
 	plt.show()
+
+def plot_fun_evolution(fun,all_points,f_title,name="media/fail.pdf"):
+
+	# Create figure
+	fig = plt.figure()
+	ax = ax = fig.add_subplot(1, 1, 1)
+	xs = np.array([i for i in range(all_points.shape[0])])
+	ys = np.array([fun(x) for x in all_points])
+	# Plot f values
+	ax.plot(xs,ys, linestyle='--', marker='o', color='b')
+	ax.grid(True)
+	ax.set_ylabel(f_title)
+	# Save fig for memory purposes
+	#plt.savefig(name)
+	plt.show()
+
+
 
 
 # Error function for exercise 1.1
@@ -148,16 +167,23 @@ initial_point = np.array([1.0,1.0])
 all_w , w, it = gradient_descent(eta,E,gradE,maxIter,error2get,initial_point)
 
 print_output_e1("E(u,v) = (u^3 e^(v-2) - 2v^2 e^(-u))^2",initial_point,eta,it,w,E)
-plot_min_point_e1(E,w,"media/E1-1.pdf")
+plot_min_point_e1(E,w,v1_title= 'u', v2_title= 'v', f_title='E(u,v)', name = "media/E1-1.pdf")
 wait()
 
 print("\n")
 print("Dibujo de todos los puntos que el algoritmo ha ido considerando en la búsqueda del mínimo")
-plot_all_e1(E,w,all_w,"media/E1-1-all.pdf")
+plot_all_e1(E,w,all_w,v1_title= 'u', v2_title= 'v', f_title='E(u,v)',name = "media/E1-1-all.pdf")
 wait()
+
+print("Valores de la función según las iteraciones")
+plot_fun_evolution(E, all_points = all_w, f_title = "E(u,v)",name = "media/f_evolution_e1-1.pdf")
+wait()
+
 
 print("\n")
 print("Ejercicio 1.2.")
+
+print("Eta = 0.01")
 
 eta = 0.01
 maxIter = 50
@@ -168,15 +194,27 @@ all_w ,w, it = gradient_descent(eta,f,grad_f,maxIter,-math.inf,initial_point)
 
 print_output_e1("f(x,y) = (x+2)^2 + 2(y-2)^2 + 2 sin(2pi x) sin(2pi y)",initial_point,eta,it,w,f)
 #plot_min_point_e1(f,w)
-plot_all_e1(f,w,all_w,"media/E1-2-all.pdf")
+plot_all_e1(f,w,all_w,v1_title='x',v2_title='y',f_title='f(x,y)',name= "media/E1-2-all.pdf")
 wait()
 
+
+print("Valores de la función según las iteraciones")
+plot_fun_evolution(f, all_points = all_w, f_title = "f(x,y)",name = "media/f_evolution_e1-2-001.pdf")
+wait()
+
+
+print("Eta = 0.1")
 eta = 0.1
 all_w ,w, it = gradient_descent(eta,f,grad_f,maxIter,-math.inf,initial_point)
 print_output_e1("f(x,y) = (x+2)^2 + 2(y-2)^2 + 2 sin(2pi x) sin(2pi y)",initial_point,eta,it,w,f)
 #plot_min_point_e1(f,w)
-plot_all_e1(f,w,all_w,"media/E1-2-loweta-all.pdf")
+plot_all_e1(f,w,all_w,v1_title='x',v2_title='y',f_title='f(x,y)',name= "media/E1-2-loweta-all.pdf")
 wait()
+
+print("Valores de la función según las iteraciones")
+plot_fun_evolution(f, all_points = all_w, f_title = "f(x,y)",name = "media/f_evolution_e1-2-01.pdf")
+wait()
+
 
 print("\n")
 print("Ejercicio 1.2,b) Tabla de valores ")
@@ -197,7 +235,7 @@ df = pd.DataFrame.from_dict(data,orient='index')
 
 points = np.array([[p[0],p[1]] for p in df['(x,y)']])
 
-plot_all_e1(f,w,points,"media/E1-2-minimums.pdf")
+plot_all_e1(f,w,points,v1_title='x',v2_title='y',f_title='f(x,y)',name= "media/E1-2-minimums.pdf")
 
 print(df)
 

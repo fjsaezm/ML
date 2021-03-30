@@ -90,7 +90,7 @@ def sgd(x,y,eta=0.01,max_iterations = 500,batch_size = 32):
 
 	return w,all_w
 
-def scatter(x,y = None,w = None,labels = None, title = ""):
+def scatter(x,y = None,ws = None,labels = None, title = ""):
 	"""
 	Funcion que permite pintar puntos en el plano
 	- x: datos
@@ -125,17 +125,19 @@ def scatter(x,y = None,w = None,labels = None, title = ""):
                 		c = colors[cls],
                 		label = name)
 
-		if w is not None:
+		if ws is not None:
 			# Get plot limits
 			x = np.array([xmin, xmax])
 
 			if labels is None:
-				ax.plot(x, -w[1]*x - w[0]/w[2])
+				for w in ws:
+					ax.plot(x, -w[1]*x - w[0]/w[2])
 				#for a in w:
 				#	ax.plot(x, (-a[1]*x - a[0])/a[2])
 					
 			else:
-				ax.plot(x, -w[1]*x - w[0]/w[2],label=name)
+				for w in ws:
+					ax.plot(x, -w[1]*x - w[0]/w[2],label=name)
 				#for a, name in zip(w, labels):
 				#	ax.plot(x, (-a[1]*x - a[0])/a[2], label=name)
 	
@@ -165,8 +167,8 @@ w,all_w = sgd(x,y,eta,max_iterations,batch_size)
 print ('Bondad del resultado para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
 print ("\tEin: ", MSE(x,y,w))
 print ("\tEout: ", MSE(x_test, y_test, w))
-scatter(x,y,w,title = "Regresión SGD en train")
-scatter(x_test,y_test,w,title = "Regresión SGD en test")
+scatter(x,y,[w],title = "Regresión SGD en train")
+scatter(x_test,y_test,[w],title = "Regresión SGD en test")
 
 
 wait()
@@ -176,8 +178,8 @@ print ('Bondad del resultado para pseudoinversa:')
 print ("\tEin: ", MSE(x,y,w_pseudo))
 print ("\tEout: ", MSE(x_test, y_test, w_pseudo))
 
-scatter(x,y,w,title = "Regresión pseudoinversa en train")
-scatter(x_test,y_test,w,title = "Regresión pseudoinversa en test")
+scatter(x,y,[w_pseudo],title = "Regresión pseudoinversa en train")
+scatter(x_test,y_test,[w_pseudo],title = "Regresión pseudoinversa en test")
 wait()
 
 exit()
