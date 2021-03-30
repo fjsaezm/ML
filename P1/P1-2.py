@@ -141,7 +141,7 @@ def scatter(x,y = None,ws = None,labels = None, title = ""):
 				#for a, name in zip(w, labels):
 				#	ax.plot(x, (-a[1]*x - a[0])/a[2], label=name)
 	
-	if y is not None or w is not None:
+	if y is not None or ws is not None:
 		ax.legend()
   	
 	ax.set_title(title)
@@ -167,6 +167,9 @@ w,all_w = sgd(x,y,eta,max_iterations,batch_size)
 print ('Bondad del resultado para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
 print ("\tEin: ", MSE(x,y,w))
 print ("\tEout: ", MSE(x_test, y_test, w))
+
+scatter(x)
+scatter(x,y)
 scatter(x,y,[w],title = "Regresión SGD en train")
 scatter(x_test,y_test,[w],title = "Regresión SGD en test")
 

@@ -98,7 +98,7 @@ Lo primero que debemos hacer es recordar en qué consiste el algoritmo de descen
 \KwResult{Mínimo local de una función}
  parametros: $\eta$, $f$, $max\_iteraciones$,$criterio\_parada$, $punto\_inicial$ \;
 
- $punto = punto\_inicial$ \;
+ $punto  \leftarrow punto\_inicial$ \;
  \While{No (Criterio de parada)}{
      $gradiente \leftarrow \nabla f(punto)$ \;
      $direccion \leftarrow - gradiente$ \;
@@ -154,7 +154,7 @@ Tras definir una función para cada una de estas derivadas parciales y una para 
 \item Tasa de aprendizaje $\eta = 0.1$.
 \item Punto inicial $(u,v) = (1,1)$.
 \item Condición de parada: Error $E$ inferior a $10^{-14}$ (esto está programado directamente en la función).
-\item Máximo de iteraciones: prácticamente ilimitado ($10000000000$) para este primer ejercicio.
+\item Máximo de iteraciones: prácticamente ilimitado ($10.000.000.000$) para este primer ejercicio.
 \end{itemize}
 
 Tras la obtención del gráfico, se ha programado también una pequeña función que formatea la salida de algunos datos que pueden ser relevantes.
@@ -348,9 +348,98 @@ con la función $f(x,y)$, podemos ver un ejemplo mucho más sencillo de que esto
 \caption{Dos mínimos locales en $f(x) = x^4 - 5 x^3 + 5 x^2 + 5 x - 6 $}
 \end{figure}
 
-Vemos que tenemos dos mínimos locales y uno global, pero si nuestro $\eta$ no es suficientemente grande, empezando por los puntos marcados $A$ y $B$, podríamos obtener como puntos mínimos dos diferentes y en este caso uno sería el correcto (al que llegamos desde $A$) y el otro no.
+Vemos que tenemos dos mínimos locales y uno de ellos es global, pero si nuestro $\eta$ no es suficientemente grande, empezando por los puntos marcados $A$ y $B$, podríamos obtener como puntos mínimos dos diferentes y en este caso uno sería el correcto (al que llegamos desde $A$) y el otro no.
 
 Por estos dos motivos principales, concluimos que la verdadera dificultad de encontrar el mínimo global está en encontrar un punto inicial adecuado así como una tasa de aprendizaje que no sea ni demasiado grande y nos haga salirnos de esos mínimos, ni demasiado pequeña y nos fuerce
 a realizar un número de iteraciones muy grande para encontrar ese mínimo global.
 
+\newpage 
+
+\section*{Ejercicio 2}
+
+En esta sección, trataremos de ajustar modelos de regresión a vectores de características. Trataremos con un caso sencillo primero, en el que ajustaremos modelos a dos características
+de imágenes de dígitos escritos mano. Como se indica en el enunciado, se tomará como características el \emph{nivel medio de gris} y la \emph{simetría respecto del eje vertical} y se tomarán imágenes de los
+números $1$ y $5$. Vamos a comentar primero los algoritmos que vamos a utilizar para estimar los modelos de regresión.\\ 
+
+
+El primero que comentaremos será el algoritmo de la \textbf{pseudoinversa}. Si dada una hipótesis $h \in \mathcal H$ lineal (esto es, $h(x) = w^T x$), consideramos la forma matricial del error en la muestra:
+$$
+E_{in}(w) = \frac{1}{N} \left(  w^T X^T X w - 2w^T X^T y + y^T y\right),
+$$
+debemos encontrar el $w$ que hace mínimo a esta expresión. Esta función es diferenciable, por lo que si calculamos su gradiente obtenemos lo siguiente:
+$$
+\nabla E_{in}(w) = \frac{2}{N} \left( X^T X w - X^T y\right) = \frac{2}{N} X^T \left(  X w -  y\right).
+$$
+Igualando a cero y suponiendo que $X^T X$ es invertible, nos queda que el mínimo $w$ es el siguiente:
+$$
+w = \left(X^T X\right)^{-1} X^T y = X^\dagger y, \quad \text{ where } \quad X^\dagger = \left(X^T X\right)^{-1} X^T.
+$$
+Es importante remarcar que este algoritmo nos garantiza el modelo de regresión con menor error para nuestro conjunto de datos $\mathcal D$. 
+
+El código de esta función es muy sencillo, basta con la siguiente función:
+\begin{lstlisting}[language=Python]
+def pseudoinverse(x,y):
+	return np.linalg.inv(x.T.dot(x)).dot(x.T).dot(y)
+\end{lstlisting}
+
+
+Continuamos presentando el segundo algoritmo que utilizaremos. Este es el \textbf{descenso de gradiente estocástico}. Este tiene que ver con el descenso de gradiente que hemos tratado en el ejercicio anterior. La base del algoritmo
+es la misma, las diferencias que los distinguen son:
+\begin{itemize}
+  \item Mientras que en el descenso de gradiente usábamos un \underline{único} punto para evaluar el gradiente en ese punto, en el descenso de gradiente estocástico usamos un \emph{batch} (subconjunto del conjunto total de los datos) de tamaño \lstinline{batch_size} para evaluar el gradiente de la función de
+  error que queremos minimizar y escoger usando este conjunto de puntos la dirección en la que nos moveremos buscando el mínimo.
+  \item El criterio de parada será un número de iteraciones concreto. En este caso, consideraremos como iteración una actualización de los pesos $w$, es decir, una evaluación del gradiente en un batch.
+  \item Se establece por enunciado que el punto de inicio siempre será un vector de ceros, no se le pasará como parámetro a la función como en el primer ejercicio.
+\end{itemize}
+
+Además de esto, hay que comentar sobre la función cómo se escogen los batches en cada iteración. Antes de la primera iteración, se crea un conjunto de índices del mismo tamaño que el total del conjunto de datos y se barajan los índices y se introducen en un vector. En cada iteración,
+se toman los siguientes $n = batch_size$ elementos de ese vector para la evaluación. Además, en cada iteración se comprueba si quedan elementos suficientes para obtener un batch completo en la siguiente iteración y, si no quedan suficientes, se vuelve a barajar el conjunto de índices y se empiezan
+a tomar desde el primero de nuevo. Los parámetros por tanto de la función son:
+\begin{enumerate}
+  \item $x$ el conjunto de datos.
+  \item $y$ las etiquetas de los datos.
+  \item $\eta$ la tasa de aprendizaje.
+  \item $max_iterations$ el número de iteraciones que se pretenden hacer.
+  \item $batch_size$, el tamaño de batch que se quiere utilizar.
+\end{enumerate}
+
+Dicho esto, el código final de la función es el siguiente:
+\begin{lstlisting}[language=python]
+  def sgd(x,y,eta=0.01,max_iterations = 500,batch_size = 32):
+
+	  # Initialize w
+	  w = np.zeros((x.shape[1],))
+	  all_w = [w]
+
+	  # Create the index for selecting the batches
+	  index = np.random.permutation(np.arange(len(x)))
+	  current_index_pos = 0
+
+	  for i in range(max_iterations):
+
+	  	# Select the index that will be used
+	  	iteration_index = index[current_index_pos : current_index_pos + batch_size]
+	  	current_index_pos += batch_size
+
+	  	# Update w and all_w
+	  	w = w - eta*dMSE(x[iteration_index, :], y[iteration_index],w)
+	  	all_w.append(w)
+
+	  	# Re-do the index if we have used all the data
+	  	if current_index_pos > len(x) or current_index_pos + batch_size > len(x):
+	  		index = np.random.permutation(np.arange(len(x)))
+	  		current_index_pos = 0
+
+	return w,all_w
+\end{lstlisting}
+
+En esta función, podemos ver mencionado \lstinline{dMSE}. Esto se refiere la derivada del \textbf{error cuadrático medio }(MSE, de \emph{mean squared error}). 
+El error cuadrático medio se define como
+$$
+MSE = E[(Xw - y)^2] =\frac{1}{N} \sum_{i=1}^N (X_i w_i - y_i)^2.
+$$
+como es diferenciable, podemos calcular su derivada y obtenemos:
+
+
+%% Comentar la funcion de error que se usa y los gradientes
 \end{document}
