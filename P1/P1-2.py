@@ -66,7 +66,7 @@ def pseudoinverse(x,y):
 def sgd(x,y,eta=0.01,max_iterations = 500,batch_size = 32):
 
 	# Initialize w
-	w = np.zeros((x.shape[1],))
+	w = np.zeros(x.shape[1])
 	all_w = [w]
 
 	# Create the index for selecting the batches
@@ -126,21 +126,37 @@ def scatter(x,y = None,ws = None,labels = None,reg_titles = None ,xlabel_title =
                 		label = name,
 						marker=".")
 
+		# Plot regressions
 		if ws is not None:
 			# Get plot limits
+			xmin, xmax = ax.get_xlim()
+			ymin, ymax = ax.get_ylim()
 			x = np.array([xmin, xmax])
 
 			if labels is None:
+				# Plot regression results
 				for w in ws:
-					ax.plot(x, -w[1]*x - w[0]/w[2])
-				#for a in w:
-				#	ax.plot(x, (-a[1]*x - a[0])/a[2])
+					# Linear regression
+					if len(w) == 3:
+						ax.plot(x, (-w[1]*x - w[0])/w[2])
+					# Non linear regression
+					else:
+						X, Y = np.meshgrid(np.linspace(xmin-0.2, xmax+0.2, 100), np.linspace(ymin-0.2, ymax+0.2, 100))
+						F = w[0] + w[1]*X + w[2]*Y + w[3]*X*Y + w[4]*X*X + w[5]*Y*Y
+						plt.contour(X, Y, F, [0])
+
 					
 			else:
 				for w,a in zip(ws,labels):
-					ax.plot(x, -w[1]*x - w[0]/w[2],label=a)
-				#for a, name in zip(w, labels):
-				#	ax.plot(x, (-a[1]*x - a[0])/a[2], label=name)
+					# Linear regression
+					if len(w) == 3:
+						ax.plot(x, (-w[1]*x - w[0])/w[2],label=a)
+						# Non linear regression
+					else:
+						X, Y = np.meshgrid(np.linspace(xmin-0.2, xmax+0.2, 100), np.linspace(ymin-0.2, ymax+0.2, 100))
+						F = w[0] + w[1]*X + w[2]*Y + w[3]*X*Y + w[4]*X*X + w[5]*Y*Y
+						plt.contour(X, Y, F, [0]).collections[0].set_label(a)
+
 	
 	if y is not None or ws is not None:
 		ax.legend()
@@ -225,15 +241,13 @@ def generate_data(noise = True):
 		# Get index of tags to modify
 		index = np.random.permutation(np.arange(N))[0:int(0.1*N)]
 		# Randomly modify them
-		y[index] =  1 if np.random.uniform(0,1) < 0.5 else -1
-
+		y[index] =  [1 if np.random.uniform(0,1) < 0.5 else -1 for i in range(len(index))]
 
 	return x,y
 
 
 
 # Generate N=1000 points in the space
-
 x,y = generate_data()
 # Scatter plot it:
 scatter(x,xlabel_title = "x1", ylabel_title = "x2",title= "1000 datos generados")
@@ -254,21 +268,21 @@ all_Eout = []
 
 print('Ejecución de N=1000 experimentos de ajuste de modelo lineal en curso ... \n')
 # 1000 Experiments
-for i in range(1000):
-	# Generate train, test data
-	x_train,y_train = generate_data()
-	x_test,y_test = generate_data()
-	# Find w using sgd
-	w,all_w = sgd(x,y,eta,max_iterations,batch_size)
-	# Evaluate w in both sets
-	all_Ein.append(MSE(x_train,y_train,w))
-	all_Eout.append(MSE(x_test,y_test,w))
-	
-all_Ein = np.array(all_Ein)
-all_Eout = np.array(all_Eout)
-print('Bondad media del resultado en 1000 experimentos para SGD')
-print("\t Average Ein: ",all_Ein.mean())
-print("\t Average Eout: ",all_Eout.mean())
+#for i in range(1000):
+#	# Generate train, test data
+#	x_train,y_train = generate_data()
+#	x_test,y_test = generate_data()
+#	# Find w using sgd
+#	w,all_w = sgd(x_train,y_train,eta,max_iterations,batch_size)
+#	# Evaluate w in both sets
+#	all_Ein.append(MSE(x_train,y_train,w))
+#	all_Eout.append(MSE(x_test,y_test,w))
+#	
+#all_Ein = np.array(all_Ein)
+#all_Eout = np.array(all_Eout)
+#print('Bondad media del resultado en 1000 experimentos para SGD con 3 características')
+#print("\t Average Ein: ",all_Ein.mean())
+#print("\t Average Eout: ",all_Eout.mean())
 	
 
 # Create new features for the data
@@ -278,4 +292,29 @@ def generate_features(x):
 	x2x2 =  np.multiply(x[:,2],x[:,2])[:, None]
 	return np.hstack((x, x1x2, x1x1, x2x2))
 
+print("a")
+x,y = generate_data()
+x = generate_features(x)
+w,all_w = sgd(x,y,eta,max_iterations,batch_size)
+scatter(x,y,[w],labels = ["Non linear SGD"],xlabel_title = "x1", ylabel_title = "x2",title = "Regresión SGD usando modelo no lineal")
+wait()
 
+all_Ein = []
+all_Eout = []
+for i in range(1000):
+	# Generate train, test data and generate more features
+	x_train,y_train = generate_data()
+	x_train = generate_features(x_train)
+	x_test,y_test = generate_data()
+	x_test = generate_features(x_test)
+	# Find w using sgd
+	w,all_w = sgd(x_train,y_train,eta,max_iterations,batch_size)
+	# Evaluate w in both sets
+	all_Ein.append(MSE(x_train,y_train,w))
+	all_Eout.append(MSE(x_test,y_test,w))
+
+all_Ein = np.array(all_Ein)
+all_Eout = np.array(all_Eout)
+print('Bondad media del resultado en 1000 experimentos para SGD con 6 características')
+print("\t Average Ein: ",all_Ein.mean())
+print("\t Average Eout: ",all_Eout.mean())
