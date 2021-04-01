@@ -90,7 +90,7 @@ def sgd(x,y,eta=0.01,max_iterations = 500,batch_size = 32):
 
 	return w,all_w
 
-def scatter(x,y = None,ws = None,labels = None, title = ""):
+def scatter(x,y = None,ws = None,labels = None,reg_titles = None ,xlabel_title = None , ylabel_title = None, title = ""):
 	"""
 	Funcion que permite pintar puntos en el plano
 	- x: datos
@@ -102,15 +102,15 @@ def scatter(x,y = None,ws = None,labels = None, title = ""):
 	"""
 	# Init subplot
 	_, ax = plt.subplots()
-	ax.set_xlabel('Intensidad Promedio')
-	ax.set_ylabel('Simetría')
+	ax.set_xlabel(xlabel_title)
+	ax.set_ylabel(ylabel_title)
 	# Set plot margins
 	xmin, xmax = np.min(x[:, 1]), np.max(x[:, 1])
 	ax.set_xlim(xmin, xmax)
 	ax.set_ylim(np.min(x[:, 2]), np.max(x[:, 2]))
 	# No classes given
 	if y is None:
-		ax.scatter(x[:, 1], x[:, 2])
+		ax.scatter(x[:, 1], x[:, 2],marker=".")
 
 	# Classes given
 	else:
@@ -123,7 +123,8 @@ def scatter(x,y = None,ws = None,labels = None, title = ""):
 			ax.scatter(	class_points[:, 1],
                 		class_points[:, 2],
                 		c = colors[cls],
-                		label = name)
+                		label = name,
+						marker=".")
 
 		if ws is not None:
 			# Get plot limits
@@ -136,8 +137,8 @@ def scatter(x,y = None,ws = None,labels = None, title = ""):
 				#	ax.plot(x, (-a[1]*x - a[0])/a[2])
 					
 			else:
-				for w in ws:
-					ax.plot(x, -w[1]*x - w[0]/w[2],label=name)
+				for w,a in zip(ws,labels):
+					ax.plot(x, -w[1]*x - w[0]/w[2],label=a)
 				#for a, name in zip(w, labels):
 				#	ax.plot(x, (-a[1]*x - a[0])/a[2], label=name)
 	
@@ -168,12 +169,11 @@ print ('Bondad del resultado para grad. descendente estocastico en {} iteracione
 print ("\tEin: ", MSE(x,y,w))
 print ("\tEout: ", MSE(x_test, y_test, w))
 
-scatter(x)
-scatter(x,y)
-scatter(x,y,[w],title = "Regresión SGD en train")
-scatter(x_test,y_test,[w],title = "Regresión SGD en test")
-
-
+scatter(x,y,xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Dibujo de los datos con etiquetas")
+wait()
+scatter(x,y,[w],labels = ["SGD"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión SGD en train")
+wait()
+scatter(x_test,y_test,[w],labels = ["SGD"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión SGD en test")
 wait()
 
 w_pseudo = pseudoinverse(x, y)
@@ -181,15 +181,19 @@ print ('Bondad del resultado para pseudoinversa:')
 print ("\tEin: ", MSE(x,y,w_pseudo))
 print ("\tEout: ", MSE(x_test, y_test, w_pseudo))
 
-scatter(x,y,[w_pseudo],title = "Regresión pseudoinversa en train")
-scatter(x_test,y_test,[w_pseudo],title = "Regresión pseudoinversa en test")
+scatter(x,y,[w_pseudo],labels = ["Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión pseudoinversa en train")
+wait()
+scatter(x_test,y_test,[w_pseudo],labels = ["Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión pseudoinversa en test")
 wait()
 
-exit()
+scatter(x,y,[w,w_pseudo],labels = ["SGD","Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title="Ambas regresiones en train")
+wait()
+scatter(x_test,y_test,[w,w_pseudo],labels = ["SGD","Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title="Ambas regresiones en test")
+wait()
 
 #Seguir haciendo el ejercicio...
-
-print('Ejercicio 2\n')
+print("-------------------------------------- \n")
+print('Ejercicio 2.2\n')
 # Simula datos en un cuadrado [-size,size]x[-size,size]
 def simula_unif(N, d, size):
 	return np.random.uniform(-size,size,(N,d))
@@ -199,7 +203,79 @@ def sign(x):
 		return 1
 	return -1
 
+@to_numpy
 def f(x1, x2):
 	return sign((x1-0.2)**2 + x2**2 - 0.6) 
 
-#Seguir haciendo el ejercicio...
+
+N = 1000
+size = 1.0
+dimensions = 2
+
+def generate_data(noise = True):
+	data = simula_unif(N,dimensions,size)
+
+	# Add 1s column, to be able to use functions of the 1st exercise
+	x = np.hstack((np.ones((1000, 1)), data))
+	# Generate tags
+	y = np.array([f(x) for x in data])
+	
+	# Generate noise in tags
+	if noise:
+		# Get index of tags to modify
+		index = np.random.permutation(np.arange(N))[0:int(0.1*N)]
+		# Randomly modify them
+		y[index] =  1 if np.random.uniform(0,1) < 0.5 else -1
+
+
+	return x,y
+
+
+
+# Generate N=1000 points in the space
+
+x,y = generate_data()
+# Scatter plot it:
+scatter(x,xlabel_title = "x1", ylabel_title = "x2",title= "1000 datos generados")
+wait()
+scatter(x,y,xlabel_title = "x1", ylabel_title = "x2",title= "1000 datos generados, con etiquetas y ruido")
+wait()
+
+
+w,all_w = sgd(x,y,eta,max_iterations,batch_size)
+print ('Bondad del resultado para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
+print ("\tEin: ", MSE(x,y,w))
+
+scatter(x,y,[w],labels = ["SGD"],xlabel_title = "x1", ylabel_title = "x2",title = "Regresión SGD en train")
+wait()
+
+all_Ein = []
+all_Eout = []
+
+print('Ejecución de N=1000 experimentos de ajuste de modelo lineal en curso ... \n')
+# 1000 Experiments
+for i in range(1000):
+	# Generate train, test data
+	x_train,y_train = generate_data()
+	x_test,y_test = generate_data()
+	# Find w using sgd
+	w,all_w = sgd(x,y,eta,max_iterations,batch_size)
+	# Evaluate w in both sets
+	all_Ein.append(MSE(x_train,y_train,w))
+	all_Eout.append(MSE(x_test,y_test,w))
+	
+all_Ein = np.array(all_Ein)
+all_Eout = np.array(all_Eout)
+print('Bondad media del resultado en 1000 experimentos para SGD')
+print("\t Average Ein: ",all_Ein.mean())
+print("\t Average Eout: ",all_Eout.mean())
+	
+
+# Create new features for the data
+def generate_features(x):
+	x1x2 =  np.multiply(x[:,1],x[:,2])[:, None]
+	x1x1 =  np.multiply(x[:,1],x[:,1])[:, None]
+	x2x2 =  np.multiply(x[:,2],x[:,2])[:, None]
+	return np.hstack((x, x1x2, x1x1, x2x2))
+
+
