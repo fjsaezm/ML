@@ -439,7 +439,19 @@ $$
 MSE = E[(Xw - y)^2] =\frac{1}{N} \sum_{i=1}^N (X_i w_i - y_i)^2.
 $$
 como es diferenciable, podemos calcular su derivada y obtenemos:
+$$
+\frac{\partial MSE(w)}\frac{\partial w_j} = \frac{2}{N} = \sum_{i = 1 }^N  x_{ij}(X_i w_i - y_i).
+$$
+
+La implementación de ambas funciones es muy sencilla:
+\begin{lstlisting}[language=python]
+def MSE(x,y,w):
+	return (np.linalg.norm(x.dot(w) - y)**2)/len(x)
+def dMSE(x,y,w):
+	return 2*(x.T.dot(x.dot(w) - y))/len(x)
+\end{lstlisting}
+
+Hemos presentado los algoritmos que utilizaremos y la función de error. Podemos pasar a la realización de los diferentes experimentos.
 
 
-%% Comentar la funcion de error que se usa y los gradientes
 \end{document}

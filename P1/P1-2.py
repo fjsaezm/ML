@@ -27,8 +27,25 @@ def to_numpy(func):
 
   return numpy_func
 
+# Data reading
+#def readData(file_x, file_y):
+#	# Read data	from file
+#	datax = np.load(file_x)
+#	datay = np.load(file_y)
+#
+#	df = pd.DataFrame({'H':1,'Intensidad Promedio' : datax[:,0], 'Simetria' : datax[:,1], 'Y':datay})
+#	df = df[(df['Y'] == 1) | (df['Y'] == 5)]
+#	# Change 1 by -1
+#	df.loc[df['Y'] == 1, 'Y'] = -1
+#	# Change 5 by 1
+#	df.loc[df['Y'] == 5, 'Y'] = 1
+#	# Get data to np vectors
+#	x = df[['H', 'Intensidad Promedio', 'Simetria']].to_numpy()
+#	y = df[['Y']].to_numpy()
+#	
+#	return x, y
 
-# Funcion para leer los datos
+## Funcion para leer los datos
 def readData(file_x, file_y):
 	# Leemos los ficheros	
 	datax = np.load(file_x)
@@ -63,11 +80,10 @@ def pseudoinverse(x,y):
 	return np.linalg.inv(x.T.dot(x)).dot(x.T).dot(y)
 
 # Stochastic Gradient Descent
-def sgd(x,y,eta=0.01,max_iterations = 500,batch_size = 32):
+def sgd(x,y,eta=0.01,max_iterations = 2000,batch_size = 32):
 
 	# Initialize w
-	w = np.zeros(x.shape[1])
-	all_w = [w]
+	w = np.zeros((x.shape[1],))
 
 	# Create the index for selecting the batches
 	index = np.random.permutation(np.arange(len(x)))
@@ -81,16 +97,15 @@ def sgd(x,y,eta=0.01,max_iterations = 500,batch_size = 32):
 
 		# Update w and all_w
 		w = w - eta*dMSE(x[iteration_index, :], y[iteration_index],w)
-		all_w.append(w)
 
 		# Re-do the index if we have used all the data
 		if current_index_pos > len(x) or current_index_pos + batch_size > len(x):
 			index = np.random.permutation(np.arange(len(x)))
 			current_index_pos = 0
 
-	return w,all_w
+	return w
 
-def scatter(x,y = None,ws = None,labels = None,reg_titles = None ,xlabel_title = None , ylabel_title = None, title = ""):
+def scatter(x,y = None,ws = None,labels = None,reg_titles = None ,xlabel_title = None , ylabel_title = None, title = "",save = True):
 	"""
 	Funcion que permite pintar puntos en el plano
 	- x: datos
@@ -105,9 +120,9 @@ def scatter(x,y = None,ws = None,labels = None,reg_titles = None ,xlabel_title =
 	ax.set_xlabel(xlabel_title)
 	ax.set_ylabel(ylabel_title)
 	# Set plot margins
-	xmin, xmax = np.min(x[:, 1]), np.max(x[:, 1])
+	xmin, xmax = np.min(1.1*x[:, 1]), np.max(1.1*x[:, 1])
 	ax.set_xlim(xmin, xmax)
-	ax.set_ylim(np.min(x[:, 2]), np.max(x[:, 2]))
+	ax.set_ylim(1.1*np.min(x[:, 2]), np.max(1.1*x[:, 2]))
 	# No classes given
 	if y is None:
 		ax.scatter(x[:, 1], x[:, 2],marker=".")
@@ -118,7 +133,7 @@ def scatter(x,y = None,ws = None,labels = None,reg_titles = None ,xlabel_title =
 		# For each class
 		for cls, name in [(-1, "Clase -1"), (1, "Clase 1")]:
       		# Get points of that class
-			class_points = x[y==cls]
+			class_points = x[np.where(y == cls)[0]]
 			# Plot them
 			ax.scatter(	class_points[:, 1],
                 		class_points[:, 2],
@@ -162,6 +177,9 @@ def scatter(x,y = None,ws = None,labels = None,reg_titles = None ,xlabel_title =
 		ax.legend()
   	
 	ax.set_title(title)
+
+	if save:
+		plt.savefig("media/"+title+".pdf")
 	plt.show() 
 
 
@@ -180,7 +198,7 @@ eta = 0.01
 max_iterations = 2000
 batch_size = 32
 
-w,all_w = sgd(x,y,eta,max_iterations,batch_size)
+w = sgd(x,y,eta,max_iterations,batch_size)
 print ('Bondad del resultado para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
 print ("\tEin: ", MSE(x,y,w))
 print ("\tEout: ", MSE(x_test, y_test, w))
@@ -207,9 +225,9 @@ wait()
 scatter(x_test,y_test,[w,w_pseudo],labels = ["SGD","Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title="Ambas regresiones en test")
 wait()
 
-#Seguir haciendo el ejercicio...
 print("-------------------------------------- \n")
 print('Ejercicio 2.2\n')
+
 # Simula datos en un cuadrado [-size,size]x[-size,size]
 def simula_unif(N, d, size):
 	return np.random.uniform(-size,size,(N,d))
@@ -221,29 +239,36 @@ def sign(x):
 
 @to_numpy
 def f(x1, x2):
+	"""Function used in 2.2 exercise"""
 	return sign((x1-0.2)**2 + x2**2 - 0.6) 
 
 
 N = 1000
-size = 1.0
+size = 1
 dimensions = 2
 
 def generate_data(noise = True):
-	data = simula_unif(N,dimensions,size)
-
-	# Add 1s column, to be able to use functions of the 1st exercise
-	x = np.hstack((np.ones((1000, 1)), data))
-	# Generate tags
-	y = np.array([f(x) for x in data])
-	
-	# Generate noise in tags
+	"""
+	Generates data adding 1 in the first col
+	"""
+	x = simula_unif(N,dimensions,size)
+	## Generate tags
+	y = np.array([f(a) for a in x])
 	if noise:
-		# Get index of tags to modify
-		index = np.random.permutation(np.arange(N))[0:int(0.1*N)]
-		# Randomly modify them
-		y[index] =  [1 if np.random.uniform(0,1) < 0.5 else -1 for i in range(len(index))]
+		y[900:] = np.random.choice([-1,1],100)
+	
+	# Añade columna de 1s
+	x = np.hstack((np.ones((1000, 1)), x))
+	return x, y
 
-	return x,y
+# Definition of two functions to simulate feature augmentation and experiment
+# Create new features for the data
+
+def generate_features(x):
+	x1x2 =  np.multiply(x[:,1],x[:,2])[:, None]
+	x1x1 =  np.multiply(x[:,1],x[:,1])[:, None]
+	x2x2 =  np.multiply(x[:,2],x[:,2])[:, None]
+	return np.hstack((x, x1x2, x1x1, x2x2))
 
 
 
@@ -255,66 +280,63 @@ wait()
 scatter(x,y,xlabel_title = "x1", ylabel_title = "x2",title= "1000 datos generados, con etiquetas y ruido")
 wait()
 
-
-w,all_w = sgd(x,y,eta,max_iterations,batch_size)
+print("Ejecución simple. Ajuste de modelo lineal sobre los datos.")
+w = sgd(x,y,eta,max_iterations,batch_size)
 print ('Bondad del resultado para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
 print ("\tEin: ", MSE(x,y,w))
 
 scatter(x,y,[w],labels = ["SGD"],xlabel_title = "x1", ylabel_title = "x2",title = "Regresión SGD en train")
 wait()
 
-all_Ein = []
-all_Eout = []
+
+# Repeat 'iterations'
+def experiment(iterations = 1000, more_features = False):
+	"""
+	Function that repeats the experiment of regression in random data 'iterations'
+	times and returns the results :
+	- iterations: number of iterations, default = 1000
+	- more_features: default=False, indicate true for generating more features
+	"""
+	E_in = 0
+	E_out = 0
+	for i in range(iterations):
+		# Generate train, test data
+		x_train,y_train = generate_data()
+		x_test,y_test = generate_data()
+		if more_features:
+			x_train = generate_features(x_train)
+			x_test  = generate_features(x_test)
+
+		# Find w using sgd
+		#w = sgd(x_train,y_train)
+		w = sgd(x_train,y_train)
+		# Evaluate w in both sets
+		E_in = E_in + MSE(x_train,y_train,w)
+		E_out = E_out + MSE(x_test,y_test,w)
+
+	return E_in/iterations,E_out/iterations
+
 
 print('Ejecución de N=1000 experimentos de ajuste de modelo lineal en curso ... \n')
 # 1000 Experiments
-#for i in range(1000):
-#	# Generate train, test data
-#	x_train,y_train = generate_data()
-#	x_test,y_test = generate_data()
-#	# Find w using sgd
-#	w,all_w = sgd(x_train,y_train,eta,max_iterations,batch_size)
-#	# Evaluate w in both sets
-#	all_Ein.append(MSE(x_train,y_train,w))
-#	all_Eout.append(MSE(x_test,y_test,w))
-#	
-#all_Ein = np.array(all_Ein)
-#all_Eout = np.array(all_Eout)
-#print('Bondad media del resultado en 1000 experimentos para SGD con 3 características')
-#print("\t Average Ein: ",all_Ein.mean())
-#print("\t Average Eout: ",all_Eout.mean())
-	
+E_in,E_out = experiment()
+print('Bondad media del resultado en 1000 experimentos para SGD con 3 características')
+print("\t Average Ein: ",E_in)
+print("\t Average Eout: ",E_out)
 
-# Create new features for the data
-def generate_features(x):
-	x1x2 =  np.multiply(x[:,1],x[:,2])[:, None]
-	x1x1 =  np.multiply(x[:,1],x[:,1])[:, None]
-	x2x2 =  np.multiply(x[:,2],x[:,2])[:, None]
-	return np.hstack((x, x1x2, x1x1, x2x2))
 
-print("a")
+
+print("\n Ajuste de los datos usando un modelo no lineal")
 x,y = generate_data()
 x = generate_features(x)
-w,all_w = sgd(x,y,eta,max_iterations,batch_size)
+w = sgd(x,y)
+print ('Bondad del resultado en modelo de 6 características para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
+print ("\tEin: ", MSE(x,y,w))
 scatter(x,y,[w],labels = ["Non linear SGD"],xlabel_title = "x1", ylabel_title = "x2",title = "Regresión SGD usando modelo no lineal")
 wait()
 
-all_Ein = []
-all_Eout = []
-for i in range(1000):
-	# Generate train, test data and generate more features
-	x_train,y_train = generate_data()
-	x_train = generate_features(x_train)
-	x_test,y_test = generate_data()
-	x_test = generate_features(x_test)
-	# Find w using sgd
-	w,all_w = sgd(x_train,y_train,eta,max_iterations,batch_size)
-	# Evaluate w in both sets
-	all_Ein.append(MSE(x_train,y_train,w))
-	all_Eout.append(MSE(x_test,y_test,w))
-
-all_Ein = np.array(all_Ein)
-all_Eout = np.array(all_Eout)
+print("Ejecucion de N=1000 experimentos de ajuste de modelo no lineal en curso ... \n")
+E_in,E_out = experiment(more_features=True)
 print('Bondad media del resultado en 1000 experimentos para SGD con 6 características')
-print("\t Average Ein: ",all_Ein.mean())
-print("\t Average Eout: ",all_Eout.mean())
+print("\t Average Ein: ",E_in)
+print("\t Average Eout: ",E_out)
