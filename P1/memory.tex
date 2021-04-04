@@ -206,8 +206,8 @@ de la función $E(u,v)$ con las iteraciones. El resultado es el siguiente:
 \subsection*{Apartado 3}
 
 Vamos a considerar ahora una nueva función. Consideramos $f: \mathbb R^2 \to \mathbb R$ dada por:
-\begin{equation}
-f(x,y) = (x+2)^2 + 2(y-2)^2 + 2\sin(2\pi x) \sin(2\pi y). \label{eq:f}
+\begin{equation}\label{eq:f}
+f(x,y) = (x+2)^2 + 2(y-2)^2 + 2\sin(2\pi x) \sin(2\pi y). 
 \end{equation}
 Por ser suma y producto de funciones derivables, es de nuevo una función derivable, cuyo gradiente viene dado por:
 $$
@@ -540,5 +540,45 @@ Como conclusión, podríamos decir que para estos datos sería más óptimo usar
 conveniente realizar una implementación más eficiente del algoritmo de pseudoinversa.
 
 \subsection*{Apartado 2}
+
+Vamos a cambiar ahora los datos que vamos a utilizar y a explorar cómo cambian los errores tanto en la muestra como fuera de ella cuando cambiamos la complejidad del modelo utilizado. En este caso, los datos
+se generarán utilizando la función proporcionada \lstinline{simula_unif(N,d,size)} que genera datos de forma uniforme en el conjunto $\mathcal = [-1,1]\times [-1,1]$. Si la ejecutamos y seguimos usando la misma función
+\lstinline{scatter} , obtenemos lo siguiente:
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.45]{media/"1000 datos generados".pdf}
+  \caption{Datos generados por \emph{simula_unif(1000,2,1.0)}.}
+\end{figure}
+Consideramos ahora la función $f:\mathbb R^2 \to \{-1,1\}$ dada por:
+$$
+f(x_1,x_2) = sign((x_1 - 0.2)^2 + x_2^2 - 0.6).
+$$
+Utilizamos esta función para asignar a cada punto generado por \emph{simula_unif} una etiqueta que será 1 o -1. Además, introduciremos ruido en las etiquetas obtenidas, cambiando de signo el $10\%$ de la muestra. Para ello, generamos 100 índices aleatorios según el tamaño de la muestra y le cambiamos
+el signo a las posiciones de estos índices. Lo comentado hasta ahora se hace en la función \lstinline{generate_data}, cuyo código es bastante sencillo:
+
+\begin{lstlisting}[language=python]
+  def generate_data(noise = True):
+	  x = simula_unif(N,dimensions,size)
+	  ## Generate tags
+	  y = np.array([f(a) for a in x])
+	  if noise:
+		  idxs = np.random.choice(N, int(0.1 * N), replace = False)
+		  y[idxs] = -y[idxs]
+	
+	  # Homogenize
+	  x = np.hstack((np.ones((1000, 1)), x))
+	  return x, y
+
+# Generamos los datos
+x,y = generate_data()
+\end{lstlisting}
+
+Como podemos ver, añadimos al conjunto de datos un $1$ en la primera columna, homogenizándolo para poder usar las funciones que habíamos definido para la primera parte de la práctica. Una vez hemos
+ejecutado esta generación de datos, podemos dibujarla usando \lstinline{scatter(x,y)} y obtenemos el siguiente gráfico:
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.6]{media/"1000 datos generados, con etiquetas y ruido".pdf}
+  \caption{Datos con etiquetas generados pot \lstinline{generate_data()}.}
+\end{figure}
 
 \end{document}
