@@ -112,6 +112,11 @@ def scatter(x,y = None,ws = None,labels = None,reg_titles = None ,xlabel_title =
 	- y: etiquetas (opcional)
 	- w: vector con pesos de regresion (opcional)
 	- labels: etiquetas para los puntos segun el modelo de regresion(opcional)
+	- reg_titles : titulos para las rectas de regresion (opcional)
+	- xlabel_title :  titulo para la etiqueta del eje x (opcional)
+	- ylabel_title : titulo para la etiqueta del eje y (opcional)
+	- title: Titulo del gráfico (opcional)
+	- save : indica si se guardará el gráfico en memoria.
 	
 	Se crean dos casos para los modelos de regresión que no sean lineales, se utiliza el caso de 6 características
 	"""
@@ -202,6 +207,7 @@ w = sgd(x,y,eta,max_iterations,batch_size)
 print ('Bondad del resultado para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
 print ("\tEin: ", MSE(x,y,w))
 print ("\tEout: ", MSE(x_test, y_test, w))
+print("\t Pesos obtenidos:",w)
 
 scatter(x,y,xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Dibujo de los datos con etiquetas")
 wait()
@@ -214,6 +220,7 @@ w_pseudo = pseudoinverse(x, y)
 print ('Bondad del resultado para pseudoinversa:')
 print ("\tEin: ", MSE(x,y,w_pseudo))
 print ("\tEout: ", MSE(x_test, y_test, w_pseudo))
+print("\t Pesos obtenidos:",w_pseudo)
 
 scatter(x,y,[w_pseudo],labels = ["Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión pseudoinversa en train")
 wait()
@@ -228,8 +235,9 @@ wait()
 print("-------------------------------------- \n")
 print('Ejercicio 2.2\n')
 
-# Simula datos en un cuadrado [-size,size]x[-size,size]
+
 def simula_unif(N, d, size):
+	"""Simula datos en un cuadrado [-size,size]x[-size,size]"""
 	return np.random.uniform(-size,size,(N,d))
 
 def sign(x):
@@ -255,9 +263,10 @@ def generate_data(noise = True):
 	## Generate tags
 	y = np.array([f(a) for a in x])
 	if noise:
-		y[900:] = np.random.choice([-1,1],100)
+		idxs = np.random.choice(N, int(0.1 * N), replace = False)
+		y[idxs] = -y[idxs]
 	
-	# Añade columna de 1s
+	# Homogenize
 	x = np.hstack((np.ones((1000, 1)), x))
 	return x, y
 

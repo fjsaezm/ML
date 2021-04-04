@@ -176,7 +176,7 @@ se observan las \textbf{coordenadas} en las que esto ocurre. Veamos cuál es la 
 
 \begin{figure}[H]
   \centering
-  \includegraphics[scale=0.7]{media/E1-1.pdf}
+  \includegraphics[scale=0.6]{media/E1-1.pdf}
   \caption{Mínimo local de la función}
 \end{figure}
 
@@ -186,7 +186,7 @@ el mínimo de la función. El resultado es el siguiente:
 
 \begin{figure}[H]
   \centering
-  \includegraphics[scale=0.7]{media/E1-1-all.pdf}
+  \includegraphics[scale=0.6]{media/E1-1-all.pdf}
   \caption{Mirada cercana al mínimo de la función}
 \end{figure}
 
@@ -198,7 +198,7 @@ de la función $E(u,v)$ con las iteraciones. El resultado es el siguiente:
 
 \begin{figure}[H]
   \centering
-  \includegraphics[scale=0.7]{media/f_evolution_e1-1.pdf}
+  \includegraphics[scale=0.6]{media/f_evolution_e1-1.pdf}
   \caption{Valor de $E(u,v)$ en cada iteración.}
 \end{figure}
 
@@ -252,7 +252,7 @@ Podemos ver el gráfico que nos genera la función utilizada en el ejercicio ant
 
 \begin{figure}[H]
   \centering
-  \includegraphics[scale=0.7]{media/E1-2-all-moved.pdf}
+  \includegraphics[scale=0.6]{media/E1-2-all-moved.pdf}
   \caption{Iteraciones en búsqueda del mínimo en $f(x,y)$ con $\eta = 0.01$.}
 \end{figure}
 
@@ -260,7 +260,7 @@ Vemos como, igual que en el caso anterior, se encuentra el mínimo local en poca
 
 \begin{figure}[H]
   \centering
-  \includegraphics[scale=0.7]{media/f_evolution_e1-2-001.pdf}
+  \includegraphics[scale=0.6]{media/f_evolution_e1-2-001.pdf}
   \caption{Valor de $f(x,y)$ en cada iteración con $\eta = 0.01$.}
 \end{figure}
 
@@ -284,7 +284,7 @@ da el algoritmo de descenso según el gradiente:
 
 \begin{figure}[H]
   \centering
-  \includegraphics[scale=0.7]{media/E1-2-loweta-all.pdf}
+  \includegraphics[scale=0.6]{media/E1-2-loweta-all.pdf}
   \caption{Iteraciones en búsqueda del mínimo en $f(x,y)$ con $\eta = 0.1$.}
 \end{figure}
 
@@ -292,7 +292,7 @@ De hecho, si nos fijamos en qué valores toma la función en las iteraciones, ve
 
 \begin{figure}[H]
   \centering
-  \includegraphics[scale=0.7]{media/f_evolution_e1-2-01.pdf}
+  \includegraphics[scale=0.6]{media/f_evolution_e1-2-01.pdf}
   \caption{Valor de $f(x,y)$ en cada iteración con $\eta = 0.1$.}
 \end{figure}
 
@@ -315,7 +315,7 @@ Como vemos, cada mínimo es diferente según el punto de inicio. Esto es debido 
 
 \begin{figure}[H]
   \centering
-  \includegraphics[scale=0.7]{media/E1-2-minimums-moved.pdf}
+  \includegraphics[scale=0.6]{media/E1-2-minimums-moved.pdf}
   \caption{Dependencia del punto inicial en el algoritmo de descenso según el gradiente.}
 \end{figure}
 
@@ -357,7 +357,14 @@ a realizar un número de iteraciones muy grande para encontrar ese mínimo globa
 
 \section*{Ejercicio 2}
 
-En esta sección, trataremos de ajustar modelos de regresión a vectores de características. Trataremos con un caso sencillo primero, en el que ajustaremos modelos a dos características
+En esta sección, trataremos de ajustar modelos de regresión a vectores de características. La clase de funciones candidatas que utilizaremos para nuestros vectores de características es la siguiente:
+$$
+\mathcal H = \left\{ h : \mathbb R^{d+1} \to \mathbb R \ | \ h(x)= w^T x, \ w \in \mathbb R^{d+1}\right\}.
+$$
+Nuestro objetivo será encontrar este $w^T \in \mathbb R^{d+1}$
+
+
+Trataremos con un caso en el que ajustaremos modelos a dos características
 de imágenes de dígitos escritos mano. Como se indica en el enunciado, se tomará como características el \emph{nivel medio de gris} y la \emph{simetría respecto del eje vertical} y se tomarán imágenes de los
 números $1$ y $5$. Vamos a comentar primero los algoritmos que vamos a utilizar para estimar los modelos de regresión.\\ 
 
@@ -372,7 +379,7 @@ $$
 $$
 Igualando a cero y suponiendo que $X^T X$ es invertible, nos queda que el mínimo $w$ es el siguiente:
 $$
-w = \left(X^T X\right)^{-1} X^T y = X^\dagger y, \quad \text{ where } \quad X^\dagger = \left(X^T X\right)^{-1} X^T.
+w = \left(X^T X\right)^{-1} X^T y = X^\dagger y, \quad \text{ donde } \quad X^\dagger = \left(X^T X\right)^{-1} X^T.
 $$
 Es importante remarcar que este algoritmo nos garantiza el modelo de regresión con menor error para nuestro conjunto de datos $\mathcal D$. 
 
@@ -382,6 +389,9 @@ def pseudoinverse(x,y):
 	return np.linalg.inv(x.T.dot(x)).dot(x.T).dot(y)
 \end{lstlisting}
 
+Esta forma de calcular el vector de pesos $w$ mediante la pseudoinversa podría no resultar muy práctica en casos en los que nuestro conjunto de datos es mucho mayor, pues calcular la inversa de una matriz puede ser un proceso computacionalmente
+muy costoso. Normalmente, para agilizar este proceso, se calcularía la descomposición \emph{SVD} de la matriz. 
+Sin embargo, lo utilizaremos en esta práctica pues el tiempo de ejecución en los experimentos han sido casi inmediatos, por lo que finalmente se ha optado por dejar esta implementación.\\
 
 Continuamos presentando el segundo algoritmo que utilizaremos. Este es el \textbf{descenso de gradiente estocástico}. Este tiene que ver con el descenso de gradiente que hemos tratado en el ejercicio anterior. La base del algoritmo
 es la misma, las diferencias que los distinguen son:
@@ -393,14 +403,14 @@ es la misma, las diferencias que los distinguen son:
 \end{itemize}
 
 Además de esto, hay que comentar sobre la función cómo se escogen los batches en cada iteración. Antes de la primera iteración, se crea un conjunto de índices del mismo tamaño que el total del conjunto de datos y se barajan los índices y se introducen en un vector. En cada iteración,
-se toman los siguientes $n = batch_size$ elementos de ese vector para la evaluación. Además, en cada iteración se comprueba si quedan elementos suficientes para obtener un batch completo en la siguiente iteración y, si no quedan suficientes, se vuelve a barajar el conjunto de índices y se empiezan
+se toman los siguientes $n = batch\_size$ elementos de ese vector para la evaluación. Además, en cada iteración se comprueba si quedan elementos suficientes para obtener un batch completo en la siguiente iteración y, si no quedan suficientes, se vuelve a barajar el conjunto de índices y se empiezan
 a tomar desde el primero de nuevo. Los parámetros por tanto de la función son:
 \begin{enumerate}
   \item $x$ el conjunto de datos.
   \item $y$ las etiquetas de los datos.
-  \item $\eta$ la tasa de aprendizaje.
-  \item $max_iterations$ el número de iteraciones que se pretenden hacer.
-  \item $batch_size$, el tamaño de batch que se quiere utilizar.
+  \item $\eta$ la tasa de aprendizaje. Se fijará a $0.1$ para los experimentos.
+  \item $max\_iterations$ el número de iteraciones que se pretenden hacer.
+  \item $batch\_size$, el tamaño de batch que se quiere utilizar. Lo establecemos en $32$ para este trabajo.
 \end{enumerate}
 
 Dicho esto, el código final de la función es el siguiente:
@@ -409,7 +419,6 @@ Dicho esto, el código final de la función es el siguiente:
 
 	  # Initialize w
 	  w = np.zeros((x.shape[1],))
-	  all_w = [w]
 
 	  # Create the index for selecting the batches
 	  index = np.random.permutation(np.arange(len(x)))
@@ -421,26 +430,25 @@ Dicho esto, el código final de la función es el siguiente:
 	  	iteration_index = index[current_index_pos : current_index_pos + batch_size]
 	  	current_index_pos += batch_size
 
-	  	# Update w and all_w
+	  	# Update w
 	  	w = w - eta*dMSE(x[iteration_index, :], y[iteration_index],w)
-	  	all_w.append(w)
 
 	  	# Re-do the index if we have used all the data
 	  	if current_index_pos > len(x) or current_index_pos + batch_size > len(x):
 	  		index = np.random.permutation(np.arange(len(x)))
 	  		current_index_pos = 0
 
-	return w,all_w
+	return w
 \end{lstlisting}
 
 En esta función, podemos ver mencionado \lstinline{dMSE}. Esto se refiere la derivada del \textbf{error cuadrático medio }(MSE, de \emph{mean squared error}). 
 El error cuadrático medio se define como
 $$
-MSE = E[(Xw - y)^2] =\frac{1}{N} \sum_{i=1}^N (X_i w_i - y_i)^2.
+MSE = E\left[(Xw - y)^2\right] =\frac{1}{N} \sum_{i=1}^N \left(X_i w_i - y_i\right)^2.
 $$
 como es diferenciable, podemos calcular su derivada y obtenemos:
 $$
-\frac{\partial MSE(w)}\frac{\partial w_j} = \frac{2}{N} = \sum_{i = 1 }^N  x_{ij}(X_i w_i - y_i).
+\frac{\partial MSE(w)}{\partial w_j} = \frac{2}{N} \sum_{i = 1 }^N  x_{ij}(X_i w_i - y_i).
 $$
 
 La implementación de ambas funciones es muy sencilla:
@@ -451,7 +459,86 @@ def dMSE(x,y,w):
 	return 2*(x.T.dot(x.dot(w) - y))/len(x)
 \end{lstlisting}
 
-Hemos presentado los algoritmos que utilizaremos y la función de error. Podemos pasar a la realización de los diferentes experimentos.
+Hemos presentado los algoritmos que utilizaremos y la función de error. Podemos pasar a la realización de los diferentes experimentos. Todas las representaciones están realizadas con la función \lstinline{scatter}. Esta recibe como parámetros principales:
+\begin{enumerate}
+\item $x$, los datos.
+\item $y$, las etiquetas.
+\item $ws$, un vector de vectores de pesos para dibujar los ajustes de regresión (opcional).
+\item $labels$, los títulos que tendrán en el gráfico los ajustes de regresión (opcional).
+\end{enumerate}
+Se le pueden además indicar más parámetros para que el gráfico generado tenga más información, como los títulos de los ejes o el título del gráfico. Se puede consultar la implementación en el archivo de la práctica. Probamos la función representando los datos con los 
+que trabajaremos en la primera parte de este ejercicio: 
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.6]{media/"Dibujo de los datos con etiquetas".pdf}
+  \caption{Datos del conjunto train con etiquetas sobre los que se realizará regresión.}
+\end{figure}
 
+Vamos a usar el gradiente descendente estocástico para estimar un modelo lineal a partir de estos datos. 
+Si ejecutamos este algoritmo para nuestros datos,  obtenemos la siguiente salida:
+\begin{lstlisting}[language=bash]
+  Bondad del resultado para grad. descendente estocastico en 2000 iteraciones:
+      Ein:  0.0814537875414063
+      Eout:  0.13517885559652956
+      Pesos obtenidos: [-1.23831589 -0.22450882 -0.46137888]
+\end{lstlisting}
+Como podemos ver, son errores bajos para el modelo lineal. Esto puede indicar que los datos son razonablemente separables y que vamos a obtener una recta de regresión que clasifique razonablemente bien nuestros datos. 
+Veamos la recta de regresión que hemos obtenido mediante esta regresión:
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.45]{media/"Regresión SGD en train".pdf}
+  \includegraphics[scale=0.45]{media/"Regresión SGD en test".pdf}
+  \caption{Resultado de la recta de regresión obtenida por SGD sobre los conjuntos de train y test.}
+\end{figure}
+Se puede apreciar como, efectivamente, prácticamente todos los puntos quedan bien separados en ambos conjuntos por las rectas de regresión
+obtenidas.\\
+
+Pasamos a hacer lo propio con el algoritmo de pseudoinversa. Si ejecutamos nuestra función comentada anteriormente con los datos, los resultados que obtenemos son:
+\begin{lstlisting}[language=bash]
+Bondad del resultado para pseudoinversa:
+        Ein:  0.07918658628900395
+        Eout:  0.13095383720052572
+        Pesos obtenidos: [-1.11588016 -1.24859546 -0.49753165]
+\end{lstlisting}
+De nuevo, vemos como obtenemos errores bastante pequeños, y si dibujamos la recta obtenida en los conjuntos de entrenamiento y de prueba, obtenemos los siguientes gráficos:
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.45]{media/"Regresión pseudoinversa en train".pdf}
+  \includegraphics[scale=0.45]{media/"Regresión pseudoinversa en test".pdf}
+  \caption{Resultado de la recta de regresión obtenida por el algoritmo de pseudoinversa sobre los conjuntos de train y test.}
+\end{figure}
+Al igual que en el caso anterior, prácticamente todos los puntos quedan bien separados.\\
+
+Ahora, trataremos de comparar ambos métodos. Vemos primero que si dibujamos ambas rectas sobre el mismo gráfico, obtenemos lo siguiente:
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.45]{media/"Ambas regresiones en train".pdf}
+  \includegraphics[scale=0.45]{media/"Ambas regresiones en test".pdf}
+  \caption{Resultado de la recta de regresión obtenida por ambos algoritmos en ambos conjuntos.}
+\end{figure}
+
+Se puede comprobar que la diferencia entre las rectas es muy pequeña, por lo que los errores también deben ser muy parecidos. Vamos a ver esto en una tabla:
+
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{llll}
+  \hline
+  Algoritmo     & $E_{in}$    & $E_{out}$  & $w$ \\ \hline
+  SGD           & $0.08145$ & $0.13517$ &  $(-1.238315, -0.224508, -0.461378)$ \\
+  Pseudoinversa & $0.07918$ & $0.13095$ & $(-1.115880, -1.248595, -0.497531)$
+  \end{tabular}
+  \end{table}
+Se puede observar que los errores son bastante similares en ambos casos, siendo la pseudoinversa algo menor tanto en la muestra como fuera de ella, lo cual es el resultado esperado, pues como hemos dicho, la pseudoinversa calculamos
+el mínimo teórico. Vemos que los vectores de pesos $w$ que obtenemos en ambos casos son prácticamente iguales, lo cual justifica que las rectas en el dibujo sean poco dispares. Además, que el error fuera de la muestra, $E_{out}$ sea mayor que dentro de la muestra es también esperado, 
+pues el error siempre puede aumentar al utilizar nuestros pesos sobre puntos desconocidos. De hecho, sabemos que en el caso lineal se tiene
+$$
+E_{out} = E_{in} + \mathcal O\left( \frac{d}{N}\right).
+$$
+
+Como conclusión, podríamos decir que para estos datos sería más óptimo usar la pseudoinversa aunque ambos ajustes sean prácticamente igual de buenos y que para conjuntos de datos de mayor tamaño, sería
+conveniente realizar una implementación más eficiente del algoritmo de pseudoinversa.
+
+\subsection*{Apartado 2}
 
 \end{document}
