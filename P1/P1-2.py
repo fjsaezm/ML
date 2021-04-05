@@ -27,24 +27,6 @@ def to_numpy(func):
 
   return numpy_func
 
-# Data reading
-#def readData(file_x, file_y):
-#	# Read data	from file
-#	datax = np.load(file_x)
-#	datay = np.load(file_y)
-#
-#	df = pd.DataFrame({'H':1,'Intensidad Promedio' : datax[:,0], 'Simetria' : datax[:,1], 'Y':datay})
-#	df = df[(df['Y'] == 1) | (df['Y'] == 5)]
-#	# Change 1 by -1
-#	df.loc[df['Y'] == 1, 'Y'] = -1
-#	# Change 5 by 1
-#	df.loc[df['Y'] == 5, 'Y'] = 1
-#	# Get data to np vectors
-#	x = df[['H', 'Intensidad Promedio', 'Simetria']].to_numpy()
-#	y = df[['Y']].to_numpy()
-#	
-#	return x, y
-
 ## Funcion para leer los datos
 def readData(file_x, file_y):
 	# Leemos los ficheros	
@@ -294,7 +276,7 @@ w = sgd(x,y,eta,max_iterations,batch_size)
 print ('Bondad del resultado para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
 print ("\tEin: ", MSE(x,y,w))
 
-scatter(x,y,[w],labels = ["SGD"],xlabel_title = "x1", ylabel_title = "x2",title = "Regresión SGD en train")
+scatter(x,y,[w],labels = ["SGD"],xlabel_title = "x1", ylabel_title = "x2",title = "Regresión SGD en train en datos aleatorios")
 wait()
 
 

@@ -78,14 +78,30 @@
 \begin{center}
 	\hrule
 	\vspace{.4cm}
-	{\textbf { \large \scshape{ Práctica 1 - Regresión lineal y descenso según el gradiente}}}
+	{\textbf { \large \scshape{ Práctica 1 - Regresión lineal y gradiente descendente}}}
 \end{center}
 {\ Javier Sáez \hspace{\fill} Aprendizaje Automático  \\
 	\hrule
 
+
+\subsection*{Nota previa}
+
+Se declara en la práctica una función \lstinline{to_numpy(func)}, que nos servirá de ayuda para la implementación. El código es muy sencillo:
+
+\begin{lstlisting}[language=Python]
+  def to_numpy(func):
+  """Decorador para convertir funciones a versión NumPy"""
+  def numpy_func(w):
+    return func(*w)
+
+  return numpy_func
+\end{lstlisting}
+Esta nos será de gran utilidad a la hora de evaluar funciones en puntos concretos. Si una función toma dos parámetros, $x_1$ y $x_2$, nos permite pasarle un único parámetro que sea un vector con dos posiciones.
+Por ejemplo, si $f: \mathbb R^2 \to \mathbb R$, en lugar de tener que hacer $f(a,b)$, podemos hacer simplemente $f(c)$ en nuestro código, donde $c$ será un vector $c = [c_1,c_2]$.
+
 \section*{Ejercicio 1}
 
-En este ejercicio, se implementará el algoritmo de descenso de gradiente y se aplicará
+En este ejercicio, se implementará el algoritmo de descenso de gradiente (o gradiente descendente) y se aplicará
 este sobre varias funciones con el objetivo de estudiar cómo afecta tanto el punto inicial 
 como la tasa de aprendizaje $\eta$ a la solución que este algoritmo encuentra.\\
 
@@ -123,7 +139,6 @@ de la función. \\
 		    # All gradient descent in 1 line
 		    w_t = w_t - eta*grad_fun(w_t)
 		    all_w.append(w_t)
-		    # sum iterations
 		    iterations += 1
 	
 
@@ -202,6 +217,8 @@ de la función $E(u,v)$ con las iteraciones. El resultado es el siguiente:
   \caption{Valor de $E(u,v)$ en cada iteración.}
 \end{figure}
 
+Como vemos, el valor del error desciende en apenas dos iteraciones hasta muy cerca del mínimo y en las siguientes al estar posiblemente cerca de un mínimo no hay mucha variación en la función y se sigue iterando hasta que el valor esté
+por debajo del deseado.
 
 \subsection*{Apartado 3}
 
@@ -211,7 +228,7 @@ f(x,y) = (x+2)^2 + 2(y-2)^2 + 2\sin(2\pi x) \sin(2\pi y).
 \end{equation}
 Por ser suma y producto de funciones derivables, es de nuevo una función derivable, cuyo gradiente viene dado por:
 $$
-\nabla f(x,y) = \Big( 2(x+2) + +4 \pi \cos(2 \pi x ) \sin (2 \pi y),\ 4 (y-2) + 4\pi \sin(2 \pi x) \cos (2 \pi y)\Big)
+\nabla f(x,y) = \Big( 2(x+2)  +4 \pi \cos(2 \pi x ) \sin (2 \pi y),\ 4 (y-2) + 4\pi \sin(2 \pi x) \cos (2 \pi y)\Big)
 $$
 
 La implementación de esta función en \emph{python} es la siguiente:\\
@@ -228,7 +245,7 @@ La implementación de esta función en \emph{python} es la siguiente:\\
 \end{lstlisting}
 
 
-Una vez implementado, volvemos a ejecutar el algoritmo de descenso según el gradiente en esta función. Esta vez, los parámetros son los siguientes:
+Todas estas funciones en el código llevan el decorador \lstinline{@to_numpy} para poder llamarlas con un solo parámetro. Una vez implementado, volvemos a ejecutar el algoritmo de descenso según el gradiente en esta función. Esta vez, los parámetros son los siguientes:
 \begin{itemize}
 \item Punto inicial $(-1,1)$.
 \item Tasa de aprendizaje $\eta = 0.01$.
@@ -301,7 +318,7 @@ $(-0.5,-0.5),(1,1),(2.1,-2.1),(-3,3),(-2,2)$ y veamos qué valores alcanzan desd
 
 \begin{table}[H]
   \begin{tabular}{llll}
-  Punto inicial   & Mínimo $(x,y)$ contrado       & Imagen en el mínimo $f(x,y)$ & Iteraciones \\
+  Punto inicial   & Mínimo $(x,y)$ encontrado       & Imagen en el mínimo $f(x,y)$ & Iteraciones \\
   {[}-0.5  0.5{]} & {[}-0.78365509  0.81314011{]} & 2.4931912832664618           & 50          \\
   {[}1. 1.{]}     & {[}0.67743878 1.29046913{]}   & 6.4375695988659185           & 50          \\
   {[} 2.1 -2.1{]} & {[} 0.14880583 -0.0960677 {]} & 12.490971442685037           & 50          \\
@@ -361,7 +378,7 @@ En esta sección, trataremos de ajustar modelos de regresión a vectores de cara
 $$
 \mathcal H = \left\{ h : \mathbb R^{d+1} \to \mathbb R \ | \ h(x)= w^T x, \ w \in \mathbb R^{d+1}\right\}.
 $$
-Nuestro objetivo será encontrar este $w^T \in \mathbb R^{d+1}$
+Nuestro objetivo será encontrar este $w^T \in \mathbb R^{d+1}$. 
 
 
 Trataremos con un caso en el que ajustaremos modelos a dos características
@@ -396,7 +413,7 @@ Sin embargo, lo utilizaremos en esta práctica pues el tiempo de ejecución en l
 Continuamos presentando el segundo algoritmo que utilizaremos. Este es el \textbf{descenso de gradiente estocástico}. Este tiene que ver con el descenso de gradiente que hemos tratado en el ejercicio anterior. La base del algoritmo
 es la misma, las diferencias que los distinguen son:
 \begin{itemize}
-  \item Mientras que en el descenso de gradiente usábamos un \underline{único} punto para evaluar el gradiente en ese punto, en el descenso de gradiente estocástico usamos un \emph{batch} (subconjunto del conjunto total de los datos) de tamaño \lstinline{batch_size} para evaluar el gradiente de la función de
+  \item Mientras que en el descenso de gradiente usábamos un \underline{único} punto (en general, suelen ser todos los datos) para evaluar el gradiente en ese punto, en el descenso de gradiente estocástico usamos un \emph{batch} (subconjunto del conjunto total de los datos) de tamaño \lstinline{batch_size} para evaluar el gradiente de la función de
   error que queremos minimizar y escoger usando este conjunto de puntos la dirección en la que nos moveremos buscando el mínimo.
   \item El criterio de parada será un número de iteraciones concreto. En este caso, consideraremos como iteración una actualización de los pesos $w$, es decir, una evaluación del gradiente en un batch.
   \item Se establece por enunciado que el punto de inicio siempre será un vector de ceros, no se le pasará como parámetro a la función como en el primer ejercicio.
@@ -483,7 +500,7 @@ Si ejecutamos este algoritmo para nuestros datos,  obtenemos la siguiente salida
       Pesos obtenidos: [-1.23831589 -0.22450882 -0.46137888]
 \end{lstlisting}
 Como podemos ver, son errores bajos para el modelo lineal. Esto puede indicar que los datos son razonablemente separables y que vamos a obtener una recta de regresión que clasifique razonablemente bien nuestros datos. 
-Veamos la recta de regresión que hemos obtenido mediante esta regresión:
+Veamos la recta de regresión que hemos obtenido mediante esta regresión, que viene dada por la expresión $w^T x = 0$:
 \begin{figure}[H]
   \centering
   \includegraphics[scale=0.45]{media/"Regresión SGD en train".pdf}
@@ -546,17 +563,26 @@ se generarán utilizando la función proporcionada \lstinline{simula_unif(N,d,si
 \lstinline{scatter} , obtenemos lo siguiente:
 \begin{figure}[H]
   \centering
-  \includegraphics[scale=0.45]{media/"1000 datos generados".pdf}
-  \caption{Datos generados por \emph{simula_unif(1000,2,1.0)}.}
+  \includegraphics[scale=0.6]{media/"1000 datos generados".pdf}
+  \caption{Datos generados por \emph{simula\_unif(1000,2,1.0)}.}
 \end{figure}
 Consideramos ahora la función $f:\mathbb R^2 \to \{-1,1\}$ dada por:
 $$
 f(x_1,x_2) = sign((x_1 - 0.2)^2 + x_2^2 - 0.6).
 $$
-Utilizamos esta función para asignar a cada punto generado por \emph{simula_unif} una etiqueta que será 1 o -1. Además, introduciremos ruido en las etiquetas obtenidas, cambiando de signo el $10\%$ de la muestra. Para ello, generamos 100 índices aleatorios según el tamaño de la muestra y le cambiamos
+Utilizamos esta función para asignar a cada punto generado por \emph{simula\_unif} una etiqueta que será 1 o -1. La implementación en python es la siguiente:
+
+\begin{lstlisting}[language=Python]
+@to_numpy
+def f(x1, x2):
+	return sign((x1-0.2)**2 + x2**2 - 0.6)
+\end{lstlisting}
+
+
+Además, introduciremos ruido en las etiquetas obtenidas, cambiando de signo el $10\%$ de la muestra. Para ello, generamos 100 índices aleatorios según el tamaño de la muestra y le cambiamos
 el signo a las posiciones de estos índices. Lo comentado hasta ahora se hace en la función \lstinline{generate_data}, cuyo código es bastante sencillo:
 
-\begin{lstlisting}[language=python]
+\begin{lstlisting}[language=Python]
   def generate_data(noise = True):
 	  x = simula_unif(N,dimensions,size)
 	  ## Generate tags
@@ -581,6 +607,251 @@ ejecutado esta generación de datos, podemos dibujarla usando \lstinline{scatter
   \caption{Datos con etiquetas generados pot \lstinline{generate_data()}.}
 \end{figure}
 
-Una vez que tenemos 
+A simple vista, podemos observar que posiblemente una recta no sea lo más adecuado para tratar de separar nuestros datos. Vamos a comprobarlo.
+Aplicamos sencillamente \lstinline{w = sgd(x,y)} para ejecutar SGD sobre nuestra población, y el resultado que obtenemos es el siguiente:
+
+\begin{lstlisting}[language=bash]
+Ejecución simple. Ajuste de modelo lineal sobre los datos.
+Bondad del resultado para grad. descendente estocastico en 2000 iteraciones:
+    Ein:  0.9216745788796801
+\end{lstlisting}
+
+Como vemos, el error en la muestra es muy alto en comparación con los casos anteriores. De hecho, si dibujamos con los pesos obtenidos la recta que teóricamente trata de separar los datos, el resultado es el siguiente:
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.6]{media/"Regresión SGD en train en datos aleatorios".pdf}
+  \caption{Regresión SGD en train en datos aleatorios.}
+\end{figure}
+
+El error fuera de la muestra $E_{out}$ será de similar calibre, ya que si generásemos otra población para que hiciese de población de test y calculásemos el error sobre ella, el resultado de que la recta que vemos separase los datos
+sería muy similar. Esto vamos a verlo en lo siguiente que haremos, que será repetir este experimento $N =1000$ veces y hacer la media de los errores tanto dentro como fuera de la muestra. Para ello, creamos la función \lstinline{experiment(iterations = 1000, more_features = False)}. 
+El parámetro \lstinline{more_features} será usado en el siguiente apartado. En esta función, se repetirá el experimento tantas veces como se le indique y en cada iteración, se generará un nuevo conjunto de train, un nuevo conjunto de test, se aplicará
+el algoritmo SGD sobre el conjunto de train y se evaluará sobre ambos conjuntos. Se devolverá el error medio tanto dentro como fuera de la muestra. El resultado obtenido por consola es el siguiente:
+
+\begin{lstlisting}[language=bash]
+Ejecución de N=1000 experimentos de ajuste de modelo lineal en curso ...
+
+Bondad media del resultado en 1000 experimentos para SGD con 3 características
+         Average Ein:  0.9270613282456569
+         Average Eout:  0.9325317891645661
+
+\end{lstlisting}
+Como intuíamos que ocurriría, el error es muy alto tanto dentro como fuera de la muestra en un conjunto grande de experimentos. Esto nos indica que regresión lineal con 3 características no es un 
+buen modelo para tratar de ajustar nuestro conjunto de datos. \\
+
+Como \textbf{valoración}, podemos decir que el ajuste con este modelo lineal no es adecuado para estos datos, ya que obtenemos unas tasas de error muy altas y necesitaríamos buscar modelos que nos permitan
+ajustar nuestros datos mejor y obtener así un porcentaje de error más bajo en la clasificación. Esto es lo que haremos en el siguiente experimento.\\
+
+El vector actual de características que tenemos es de la forma $(1,x_1,x_2)$. Consideremos ahora  la función $\phi : \mathbb R^3 \to \mathbb R^6$ dada por:
+$$
+\phi(1,x_1,x_2) = (1,x_1,x_2,x_1x_2,x_1^2,x_2^2).
+$$
+Lo que haremos ahora será, una vez generados los datos con la función anterior, llamar a la siguiente función:
+
+\begin{lstlisting}[language=Python]
+  def generate_features(x):
+	  x1x2 =  np.multiply(x[:,1],x[:,2])[:, None]
+	  x1x1 =  np.multiply(x[:,1],x[:,1])[:, None]
+	  x2x2 =  np.multiply(x[:,2],x[:,2])[:, None]
+	  return np.hstack((x, x1x2, x1x1, x2x2))
+
+  # Creamos la población
+  x = generate_data()
+  # Expandimos las características de todos los puntos de la muestra
+  x = generate_features(x)
+\end{lstlisting}
+
+Ahora, podemos tratar de ajustar una cónica en el plano en lugar de una recta. Si ejecutamos SGD sobre estos datos y dibujamos de nuevo la cónica que viene dada por $w^t x = 0$, obtenemos 
+
+
+\begin{lstlisting}[language=bash]
+Ajuste de los datos usando un modelo no lineal
+Bondad del resultado en modelo de 6 características para grad. descendente estocastico en 2000 iteraciones:
+
+        Ein:  0.5685870579996709
+\end{lstlisting}
+
+Se comprueba como el error desciende considerablemente. Vamos a dibujar la cónica obtenida para ver cómo ajusta esta a los datos:
+\begin{figure}[H]
+  
+  \centering
+  \includegraphics[scale=0.6]{media/"Regresión SGD usando modelo no lineal".pdf}
+  \caption{Regresión SGD usando modelo no lineal.}
+  \label{fig:no-lin}
+\end{figure}
+
+De hecho, vamos a realizar lo mismo que en el caso de una recta y vamos a repetir el experimento $N=1000$ veces y a calcular los errores $E_{in}, E_{out}$ promedios para ver qué resultado obtenemos. Esto se realiza
+con la misma función \lstinline{experiment(more_features = True)}, en este caso indicando que queremos que se generen el resto de características. El resultado es el siguiente:
+
+\begin{lstlisting}[language=bash]
+Ejecucion de N=1000 experimentos de ajuste de modelo no lineal en curso ...
+
+Bondad media del resultado en 1000 experimentos para SGD con 6 características
+         Average Ein:  0.580916690228773
+         Average Eout:  0.5877043117916749
+\end{lstlisting}
+
+Como podemos ver, obtenemos en media errores más bajos tanto dentro como fuera de la muestra, lo cual nos está indicando que este tipo de ajuste con características no lineales
+es mejor que el que hemos hecho anteriormente con características lineales. Aún así, el error no es capaz de descender a niveles tan pequeños como los del ejercicio anterior ya que
+hemos introducido una cantidad considerable de ruido, como podemos ver en la figura \ref{fig:no-lin}.
+
+Como \textbf{conclusión} a este ejercicio, podemos decir que en este caso utilizar modelos lineales no es adecuado y es mejor aumentar la complejidad del modelo para conseguir que se reduzcan 
+los errores tanto dentro como fuera de la muestra, consiguiendo así una función más parecida a la función real que se usa para etiquetar, salvo por supuesto el ruido que estamos introduciendo manualmente.
+
+\newpage
+
+\section*{Bonus: Método de Newton}
+
+En este último apartado, se realizará la implementación del método de Newton. Este método nos da , dada una función $f: \mathbb R^n \to \mathbb R$, aproximaciones a los ceros de esta función. Así, si consideramos la función $\nabla f$, y tratamos de encontrar
+los ceros de esta función, estaremos encontrando extremos de nuestra función $f$ (que sabemos que suele ser una función de error), y podremos encontrar entonces los mínimos deseados. Sabemos que la búsqueda de los puntos en el método de Newton se hace tomando el punto $x_{k+1}$ como:
+$$
+x_{k+1} = x_k - \frac{f'(x_k)}{f''(x_k)}.
+$$
+En nuestro caso, $f''(x_k) = \nabla^2 f(x_k) = H_f(x_k)$ pues nuestra función parte de $\mathbb R^d$, donde $H$ es la matriz Hessiana de $f$. La matriz Hessiana de $f: \mathbb R^2 \to \mathbb R$ (hablamos en este caso pues es el que usaremos en nuestro problema), viene dada por la expresión:
+$$
+H = \begin{pmatrix}
+  \frac{\partial^2 f}{\partial^2 x^2} & \frac{\partial^2 f}{\partial x \partial y}\\
+  \frac{\partial^2 f}{\partial y \partial x} & \frac{\partial^2 f}{\partial^2 y^2}
+  \end{pmatrix}.
+$$
+
+Utilizando esta matriz en nuestro problema, obtenemos que en cada iteración, debemos actualizar los pesos de la siguiente manera:
+$$
+\Delta w = w_{k+1} - w_{k} = - H^{-1}\nabla f(w_k) \implies w_{k+1} = w_k - H^{-1}\nabla f(w_k).
+$$
+
+Recordamos que la función que teníamos en el apartado 3 del ejercicio 1 era:
+$$
+f(x,y) = (x+2)^2 + 2(y-2)^2 + 2\sin(2\pi x) \sin(2\pi y).
+$$
+Tenemos que calcular su Hessiana para poder aplicar el algoritmo. La hessiana es la siguiente:
+$$
+H = \begin{pmatrix} 2- 8 \pi^2 \sin(2 \pi y) \sin(2 \pi x) & 8 \pi^2 \cos(2 \pi x) \cos(2 \pi y) \\
+     8 \pi^2 \cos(2 \pi x) \cos(2 \pi y) & 4- 8 \pi^2 \sin(2 \pi x) \sin(2 \pi y) 
+    \end{pmatrix}.
+$$
+
+La implementación de esta hessiana es la siguiente:
+
+\begin{lstlisting}[language=Python]
+def hfxx(x, y):
+  """Two times partial derivative respect x of f(x, y)."""
+  return 2 - 8 * np.pi ** 2 * np.sin(2 * np.pi * y) * np.sin(2 * np.pi * x)
+
+def hfyy(x, y):
+  """Two times partial derivative respect x of f(x, y)."""
+  return 4 - 8 * np.pi ** 2 * np.sin(2 * np.pi * x) * np.sin(2 * np.pi * y)
+
+def hfxy(x, y):
+  """Partial derivative respect x and then respect y of f(x,y)."""
+  return 8 * np.pi ** 2 * np.cos(2 * np.pi * y) * np.cos(2 * np.pi * x)
+
+@to_numpy
+def hf(x, y):
+  """f(x, y) Hessian."""
+  return np.array([[hfxx(x, y), hfxy(x, y)],
+        [hfxy(x, y), hfyy(x, y)]])
+\end{lstlisting}
+Una vez tenemos este código, podemos directamente escribir el código del método de Newton, que es tan sencillo como el de descenso del gradiente. El código resultante es el siguiente:
+
+
+\begin{lstlisting}[language=Python]
+  def newton(eta,dfun,hfun,maxIter,initial_point):
+	  w = initial_point.copy()
+	  all_w = [w]
+	  for i in range(maxIter):
+		  w = w - eta*np.linalg.inv(hfun(w)).dot(dfun(w))
+		  all_w.append(w)
+  return np.array(all_w),w
+\end{lstlisting}
+Como vemos, el esqueleto es igual que el del descenso de gradiente, solo que cambiamos como hemos indicado la forma de actualizar los pesos en cada iteración. Vamos ahora a realizar los experimentos que se pedían 
+para el apartado 3, pero usando como método el que acabamos de explicar. Para representar los datos, se ha programado por comodidad una nueva función \lstinline{print_output_bonus} que muestra por cada ejecución del método
+de Newton los parámetros con los que se ha ejecutado y el resultado obtenido. También se ha programado una función \lstinline{plot_bonus_comparison} que muestra los valores que va tomando la función $f(x,y)$ en los puntos que se le indiquen,
+que serán siempre los que nos devuelva el método de Newton.\\
+
+Comenzamos realizando el experimento que usa como punto inicial $(-1,1)$, tasa de aprendizaje $\eta = 0.01$ y un máximo de $50$ iteraciones. La consola nos indica que las coordenadas que se han alcanzado en estas 50 iteraciones son 
+$$
+(x,y) = ( -0.9793498 ,  0.9893767 ) \quad \text { con } \quad f(x,y) = 3.067185951
+$$
+
+Volviendo atrás en el documento, podríamos ver cómo el valor que alcanzaba el descenso de gradiente para estos mismos parámetros era de $-0.3812$, lo cual puede decirnos que el descenso de gradiente encuentra mejores mínimos para esta función y este punto inicial.
+
+Vamos a ver cómo ha ido evolucionando la $f$ según las iteraciones del experimento:
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.6]{media/"Newton's first execution, eta = 0.01".pdf}
+  \caption{Ejecución del método de Newton desde el punto $(-1,1)$ con $\eta = 0.01$.}
+\end{figure}
+
+En este caso, el valor de $f$ en vez de descender ha ascendido, aunque vemos en el eje $y$ que el ascenso ha sido ínfimo. Esto podría decirnos de primeras que este algoritmo en general puede ser peor que el descenso de gradiente para esta función $f$, pero haremos una comparación más adelante. 
+Ahora, nos ocupamos de hacer un nuevo experimento , en el que haremos que la tasa de aprendizaje sea $\eta = 0.1$. Si lo ejecutamos, obtenemos que las coordenadas tras las $50$ iteraciones son 
+$$
+(x,y) = ( -0.94632740 ,  0.97170823 ) \quad \text{ con } \quad f(x,y) =3.107976722. 
+$$
+Comparando con el caso anterior, tenemos una distancia entre los valores de $f$ en ambos puntos que puede no parecer muy grande, pero si observamos cómo ha ido evolucionando nuestra función $f$ en ambos casos, el gráfico que obtenemos es el siguiente:
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.6]{media/"Comparison Newton's method different etas".pdf}
+  \caption{Comparación de ejecución de método de Newton con $\eta =0.01$ y $\eta = 0.1$.}
+\end{figure}
+Vemos como el caso del $\eta$ más grande alcanza un valor de $\sim 3.10$ mucho más pronto, posiblemente debido a ese impulso que le da la tasa de aprendizaje teniendo un valor mayor. Aún así, se estabiliza en ese valor para las siguientes iteraciones mientras que con la tasa de aprendizaje $\eta = 0.01$ nunca deja de ascender, lo que podría indicar que si hiciésemos
+el número de iteraciones más grande, quizá se podría alcanzar este mismo punto.\\
+
+Estamos viendo por tanto que, al igual que en el caso del descenso de gradiente, la tasa de aprendizaje juega un papel importante a la hora de encontrar un mínimo usando el método de Newton y que es importante por tanto encontrar una tasa de aprendizaje que se adecúe a nuestro problema para no obtener tiempos de cómputo muy elevados.
+
+Comparemos ahora qué resultados tiene el gradiente descendente con $\eta =0.01$ desde el mismo punto de inicio y en el mismo número de iteraciones con los casos anteriores:
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.6]{media/"Comparision Newton's method with gradient descent".pdf}
+  \caption{Comparativa del método de Newton con el gradiente descendente, ambos con el mismo punto de inicio.}
+\end{figure}
+
+Anteriormente habíamos mencionado que era posible que el gradiente descendente encontrase mejores mínimos para esta función usando las tasas de aprendizaje que hemos utilizado. Con este gráfico, confirmamos esta idea y podemos confirmar que para 
+esta función, es más conveniente utilizar el algoritmo de descenso de gradiente para encontrar un mínimo, ya que la diferencia entre ambos algoritmos es bastante considerable en resultado, obteniendo el descenso de gradiente un resultado mucho más óptimo
+en cuanto a minimización.
+
+\subsection*{Apartado 2}
+Ahora, al igual que hicimos en el ejercicio 1, vamos a ejecutar el método de Newton sobre varios puntos diferentes con la misma tasa de aprendizaje para todos y vamos a ver qué puntos se obtienen como mínimos y qué valores toma la función $f$ en cada
+uno de ellos. El resultado de la ejecución es el siguiente:
+\begin{table}[H]
+  \begin{tabular}{llll}
+  Punto inicial               & Mínimo (x,y) encontrado                & Imagen $f(x,y)$ en el mínimo                & Iteraciones \\
+  {[}-0.5  0.5{]} & {[}-0.4688174   0.48387437{]} & 6.902412398443703      & 50         \\
+  {[}1. 1.{]}     & {[}1.02206051 0.96894401{]}   & 11.205423036736665     & 50         \\
+  {[} 2.1 -2.1{]} & {[} 2.11759899 -2.07774574{]} & 49.5785291890354       & 50         \\
+  {[}-3.  3.{]}   & {[}-3.02065016  3.01062326{]} & 3.067185951548828      & 50         \\
+  {[}-2.  2.{]}   & {[}-2.  2.{]}                 & -4.799231304517944e-31 & 50        
+  \end{tabular}
+\end{table}
+Al igual que en el caso anterior, los mínimos que se encuentran según en el punto en el que empecemos son totalmente diferntes. Ahora, además, los valores de $f$ tienen incluso más distancia entre ellos, además de no parecerse mucho a los que se encuentran usando
+el descenso de gradiente, salvo en el caso del punto $(-2,2)$. Esto es debido a que este punto es probablemente el mínimo local. Vamos a hacer una comparación de los valores que toma la función en los mínimos usando ambos algoritmos según el punto en el que se inicia 
+la búsqueda de estos mínimos:
+
+\begin{table}[H]
+  \begin{tabular}{lll}
+  Punto inicial   & f(x,y) según Descenso de Gradiente & f(x,y) según Newton     \\
+  {[}-0.5  0.5{]} & 2.4931912832664618                 & 6.902412398443703                        \\
+  {[}1. 1.{]}     & 6.4375695988659185                 & 11.205423036736665                       \\
+  {[} 2.1 -2.1{]} & 12.490971442685037                 & 49.5785291890354                         \\
+  {[}-3.  3.{]}   & -0.38124949743809955               & 3.067185951548828                        \\
+  {[}-2.  2.{]}   & -4.799231304517944e-31             & -4.799231304517944e-31                   
+  \end{tabular}
+  \end{table}
+
+  Como comentábamos, los mínimos que encuentra el descenso de gradiente son bastante inferiores en todos los casos, lo cual nos puede indicar que con tasas de aprendizaje $\eta$ similares y pequeñas, además de no necesariamente estar cerca del mínimo que se está buscando, este método es mucho más estable y 
+  óptimo para la búsqueda de mínimos en funciones. Por último, podemos ver qué valores han ido tomando la función $f$ en cada iteración para cada uno de los puntos. Representaremos tanto el método de Newton para los puntos que se nos ha dado, como el gradiente descendente en los puntos $(1,1)$ y $(-2.1,2.1)$ (los
+  cuales también son usados en el método de Newton). El resultado es el siguiente:
+  \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.6]{media/"Starting in all points compared to GD".pdf}
+    \caption{Valores de $f$ en las iteraciones desde los puntos anteriores según Newton, y desde dos puntos según el descenso de gradiente.}
+  \end{figure}
+  
+  Como podemos observar, en el método de Newton las soluciones encontradas no suelen variar mucho y si lo hacen es de forma brusca como en el caso del punto
+  de inicio $(2.1,-2.1)$. Mientras tanto, en el descenso de gradiente, nuestra función $f$ por lo general va siempre hacia valores menores de la misma.
+
+  Es por esto que como \texbf{conclusión}, podemos decir que  para esta función es mejor utilizar el gradiente descendente pues encuentra mínimos mejores, es menos restrictiva (no requiere en general que la función sea dos veces derivable) y es más 
+  fácil de calcular, pues no tenemos que calcular una inversa. Sin embargo, no podemos afirmar que esto sea así para todas las funciones, y puede que en otras que tengan menor cantidad de puntos críticos como pudimos ver que esta tiene en anteriores representaciones, el método
+  de Newton sea mejor.
 
 \end{document}
