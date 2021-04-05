@@ -9,11 +9,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+# ------------------------------------------
+# ------------ EJERCICIO 2 -----------------
+# ------------------------------------------
+
+
 np.random.seed(1)
 
 # Constants for the data
 label5 = 1
 label1 = -1
+
+N = 1000
+size = 1
+dimensions = 2
 
 # Auxiliar functions to help with the exercises
 
@@ -87,7 +96,7 @@ def sgd(x,y,eta=0.01,max_iterations = 2000,batch_size = 32):
 
 	return w
 
-def scatter(x,y = None,ws = None,labels = None,reg_titles = None ,xlabel_title = None , ylabel_title = None, title = "",save = True):
+def scatter(x,y = None,ws = None,labels = None,reg_titles = None ,xlabel_title = None , ylabel_title = None, title = "",save = False):
 	"""
 	Funcion que permite pintar puntos en el plano
 	- x: datos
@@ -171,115 +180,6 @@ def scatter(x,y = None,ws = None,labels = None,reg_titles = None ,xlabel_title =
 
 
 
-# Lectura de los datos de entrenamiento
-x, y = readData('datos/X_train.npy', 'datos/y_train.npy')
-# Lectura de los datos para el test
-x_test, y_test = readData('datos/X_test.npy', 'datos/y_test.npy')
-
-
-print('EJERCICIO SOBRE REGRESION LINEAL\n')
-print('Ejercicio 2\n')
-
-
-eta = 0.01
-max_iterations = 2000
-batch_size = 32
-
-w = sgd(x,y,eta,max_iterations,batch_size)
-print ('Bondad del resultado para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
-print ("\tEin: ", MSE(x,y,w))
-print ("\tEout: ", MSE(x_test, y_test, w))
-print("\t Pesos obtenidos:",w)
-
-scatter(x,y,xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Dibujo de los datos con etiquetas")
-wait()
-scatter(x,y,[w],labels = ["SGD"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión SGD en train")
-wait()
-scatter(x_test,y_test,[w],labels = ["SGD"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión SGD en test")
-wait()
-
-w_pseudo = pseudoinverse(x, y)
-print ('Bondad del resultado para pseudoinversa:')
-print ("\tEin: ", MSE(x,y,w_pseudo))
-print ("\tEout: ", MSE(x_test, y_test, w_pseudo))
-print("\t Pesos obtenidos:",w_pseudo)
-
-scatter(x,y,[w_pseudo],labels = ["Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión pseudoinversa en train")
-wait()
-scatter(x_test,y_test,[w_pseudo],labels = ["Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión pseudoinversa en test")
-wait()
-
-scatter(x,y,[w,w_pseudo],labels = ["SGD","Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title="Ambas regresiones en train")
-wait()
-scatter(x_test,y_test,[w,w_pseudo],labels = ["SGD","Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title="Ambas regresiones en test")
-wait()
-
-print("-------------------------------------- \n")
-print('Ejercicio 2.2\n')
-
-
-def simula_unif(N, d, size):
-	"""Simula datos en un cuadrado [-size,size]x[-size,size]"""
-	return np.random.uniform(-size,size,(N,d))
-
-def sign(x):
-	if x >= 0:
-		return 1
-	return -1
-
-@to_numpy
-def f(x1, x2):
-	"""Function used in 2.2 exercise"""
-	return sign((x1-0.2)**2 + x2**2 - 0.6) 
-
-
-N = 1000
-size = 1
-dimensions = 2
-
-def generate_data(noise = True):
-	"""
-	Generates data adding 1 in the first col
-	"""
-	x = simula_unif(N,dimensions,size)
-	## Generate tags
-	y = np.array([f(a) for a in x])
-	if noise:
-		idxs = np.random.choice(N, int(0.1 * N), replace = False)
-		y[idxs] = -y[idxs]
-	
-	# Homogenize
-	x = np.hstack((np.ones((1000, 1)), x))
-	return x, y
-
-# Definition of two functions to simulate feature augmentation and experiment
-# Create new features for the data
-
-def generate_features(x):
-	x1x2 =  np.multiply(x[:,1],x[:,2])[:, None]
-	x1x1 =  np.multiply(x[:,1],x[:,1])[:, None]
-	x2x2 =  np.multiply(x[:,2],x[:,2])[:, None]
-	return np.hstack((x, x1x2, x1x1, x2x2))
-
-
-
-# Generate N=1000 points in the space
-x,y = generate_data()
-# Scatter plot it:
-scatter(x,xlabel_title = "x1", ylabel_title = "x2",title= "1000 datos generados")
-wait()
-scatter(x,y,xlabel_title = "x1", ylabel_title = "x2",title= "1000 datos generados, con etiquetas y ruido")
-wait()
-
-print("Ejecución simple. Ajuste de modelo lineal sobre los datos.")
-w = sgd(x,y,eta,max_iterations,batch_size)
-print ('Bondad del resultado para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
-print ("\tEin: ", MSE(x,y,w))
-
-scatter(x,y,[w],labels = ["SGD"],xlabel_title = "x1", ylabel_title = "x2",title = "Regresión SGD en train en datos aleatorios")
-wait()
-
-
 # Repeat 'iterations'
 def experiment(iterations = 1000, more_features = False):
 	"""
@@ -307,27 +207,141 @@ def experiment(iterations = 1000, more_features = False):
 
 	return E_in/iterations,E_out/iterations
 
+def generate_data(noise = True):
+		"""
+		Generates data adding 1 in the first col
+		"""
+		x = simula_unif(N,dimensions,size)
+		## Generate tags
+		y = np.array([f(a) for a in x])
+		if noise:
+			idxs = np.random.choice(N, int(0.1 * N), replace = False)
+			y[idxs] = -y[idxs]
 
-print('Ejecución de N=1000 experimentos de ajuste de modelo lineal en curso ... \n')
-# 1000 Experiments
-E_in,E_out = experiment()
-print('Bondad media del resultado en 1000 experimentos para SGD con 3 características')
-print("\t Average Ein: ",E_in)
-print("\t Average Eout: ",E_out)
+		# Homogenize
+		x = np.hstack((np.ones((1000, 1)), x))
+		return x, y
+
+	# Definition of two functions to simulate feature augmentation and experiment
+	# Create new features for the data
+
+def generate_features(x):
+	x1x2 =  np.multiply(x[:,1],x[:,2])[:, None]
+	x1x1 =  np.multiply(x[:,1],x[:,1])[:, None]
+	x2x2 =  np.multiply(x[:,2],x[:,2])[:, None]
+	return np.hstack((x, x1x2, x1x1, x2x2))
+
+
+def simula_unif(N, d, size):
+	"""Simula datos en un cuadrado [-size,size]x[-size,size]"""
+	return np.random.uniform(-size,size,(N,d))
+def sign(x):
+	if x >= 0:
+		return 1
+	return -1
+@to_numpy
+def f(x1, x2):
+	"""Function used in 2.2 exercise"""
+	return sign((x1-0.2)**2 + x2**2 - 0.6) 
+
+
+def ej2():
+
+	# Lectura de los datos de entrenamiento
+	x, y = readData('datos/X_train.npy', 'datos/y_train.npy')
+	# Lectura de los datos para el test
+	x_test, y_test = readData('datos/X_test.npy', 'datos/y_test.npy')
+
+
+	print('EJERCICIO SOBRE REGRESION LINEAL\n')
+	print('Ejercicio 2\n')
+
+
+	eta = 0.01
+	max_iterations = 2000
+	batch_size = 32
+
+	w = sgd(x,y,eta,max_iterations,batch_size)
+	print ('Bondad del resultado para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
+	print ("\tEin: ", MSE(x,y,w))
+	print ("\tEout: ", MSE(x_test, y_test, w))
+	print("\t Pesos obtenidos:",w)
+
+	print("Datos con etiquetas")
+	scatter(x,y,xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Dibujo de los datos con etiquetas")
+	wait()
+	print("Regresión SGD en Train")
+	scatter(x,y,[w],labels = ["SGD"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión SGD en train")
+	wait()
+	print("Regresión SGD en test")
+	scatter(x_test,y_test,[w],labels = ["SGD"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión SGD en test")
+	wait()
+
+	w_pseudo = pseudoinverse(x, y)
+	print ('Bondad del resultado para pseudoinversa:')
+	print ("\tEin: ", MSE(x,y,w_pseudo))
+	print ("\tEout: ", MSE(x_test, y_test, w_pseudo))
+	print("\t Pesos obtenidos:",w_pseudo)
+
+	print("Regresión Pseudoinversa en train")
+	scatter(x,y,[w_pseudo],labels = ["Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión pseudoinversa en train")
+	wait()
+	print("Regresión Pseudoinversa en test")
+	scatter(x_test,y_test,[w_pseudo],labels = ["Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title = "Regresión pseudoinversa en test")
+	wait()
+
+	print("Ambas regresiones en train en train")
+	scatter(x,y,[w,w_pseudo],labels = ["SGD","Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title="Ambas regresiones en train")
+	wait()
+	print("Ambas regresiones en test")
+	scatter(x_test,y_test,[w,w_pseudo],labels = ["SGD","Pseudoinverse"],xlabel_title = "Intensidad promedio", ylabel_title = "Simetría",title="Ambas regresiones en test")
+	wait()
+
+	print("-------------------------------------- \n")
+	print('Ejercicio 2.2\n')
+
+
+	# Generate N=1000 points in the space
+	x,y = generate_data()
+	# Scatter plot it:
+	print("Datos generados")
+	scatter(x,xlabel_title = "x1", ylabel_title = "x2",title= "1000 datos generados")
+	wait()
+	print("Datos con etiquetas")
+	scatter(x,y,xlabel_title = "x1", ylabel_title = "x2",title= "1000 datos generados, con etiquetas y ruido")
+	wait()
+
+	print("Ejecución simple. Ajuste de modelo lineal sobre los datos.")
+	w = sgd(x,y,eta,max_iterations,batch_size)
+	print ('Bondad del resultado para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
+	print ("\tEin: ", MSE(x,y,w))
+
+	scatter(x,y,[w],labels = ["SGD"],xlabel_title = "x1", ylabel_title = "x2",title = "Regresión SGD en train en datos aleatorios")
+	wait()
+
+	print('Ejecución de N=1000 experimentos de ajuste de modelo lineal en curso ... \n')
+	# 1000 Experiments
+	E_in,E_out = experiment()
+	print('Bondad media del resultado en 1000 experimentos para SGD con 3 características')
+	print("\t Average Ein: ",E_in)
+	print("\t Average Eout: ",E_out)
 
 
 
-print("\n Ajuste de los datos usando un modelo no lineal")
-x,y = generate_data()
-x = generate_features(x)
-w = sgd(x,y)
-print ('Bondad del resultado en modelo de 6 características para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
-print ("\tEin: ", MSE(x,y,w))
-scatter(x,y,[w],labels = ["Non linear SGD"],xlabel_title = "x1", ylabel_title = "x2",title = "Regresión SGD usando modelo no lineal")
-wait()
+	print("\n Ajuste de los datos usando un modelo no lineal")
+	x,y = generate_data()
+	x = generate_features(x)
+	w = sgd(x,y)
+	print ('Bondad del resultado en modelo de 6 características para grad. descendente estocastico en {} iteraciones:\n'.format(max_iterations))
+	print ("\tEin: ", MSE(x,y,w))
+	scatter(x,y,[w],labels = ["Non linear SGD"],xlabel_title = "x1", ylabel_title = "x2",title = "Regresión SGD usando modelo no lineal")
+	wait()
 
-print("Ejecucion de N=1000 experimentos de ajuste de modelo no lineal en curso ... \n")
-E_in,E_out = experiment(more_features=True)
-print('Bondad media del resultado en 1000 experimentos para SGD con 6 características')
-print("\t Average Ein: ",E_in)
-print("\t Average Eout: ",E_out)
+	print("Ejecucion de N=1000 experimentos de ajuste de modelo no lineal en curso ... \n")
+	E_in,E_out = experiment(more_features=True)
+	print('Bondad media del resultado en 1000 experimentos para SGD con 6 características')
+	print("\t Average Ein: ",E_in)
+	print("\t Average Eout: ",E_out)
+
+
+ej2()
