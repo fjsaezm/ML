@@ -87,6 +87,7 @@
 {\ Javier Sáez \hspace{\fill} Aprendizaje Automático  \\
 	\hrule
 
+
 \section*{Complejidad de $\mathcal{H}$ y ruido.}
 
 En este ejercicio, trabajaremos con clases de funciones sencillas y con datos que contienen ruido. El objetivo será estudiar cómo afecta 
@@ -180,7 +181,7 @@ Como se puede observar, ninguna de las funciones ajusta nada bien los datos que 
 $$
 Accuracy = \frac{TP + TN}{P + N}
 $$
-donde $TP$ es el número de ejemplos positivos que se han clasificado bien, $TN$ es el número de ejemplos negativos que se han clasificado bien, y $P,N$ son los números de positivos y negativos respectivamente. Además, si las clases no estuviesen balanceadas, existe .Para calcular esto, \lstinline{sklearn} dispone de un conjunto de funciones que se encuentra en \lstlinline{sklearn.metrics}, y que son \lstinline{accuracy_score(y_true,y_predicted), balanced_accuracy_score(y_true, y_predicted)}. Los resultados que obtenemos al ejecutar un trozo de código que nos calcula para cada una de las funciones estos valores, son los siguientes:
+donde $TP$ es el número de ejemplos positivos que se han clasificado bien, $TN$ es el número de ejemplos negativos que se han clasificado bien, y $P,N$ son los números de positivos y negativos respectivamente. Además, si las clases no estuviesen balanceadas, existe una función que hace hace un accuracy ponderado al número de elementos de cada clase.Para calcular esto, \lstinline{sklearn} dispone de un conjunto de funciones que se encuentra en \lstlinline{sklearn.metrics}, y que son \lstinline{accuracy_score(y_true,y_predicted), balanced_accuracy_score(y_true, y_predicted)}. Los resultados que obtenemos al ejecutar un trozo de código que nos calcula para cada una de las funciones estos valores, son los siguientes:
 
 \begin{table}[H]
   \centering
@@ -196,7 +197,7 @@ donde $TP$ es el número de ejemplos positivos que se han clasificado bien, $TN$
   \end{table}
 
 
-Como ya nos indicaban las gráficas, las \textbf{precisiones} que obtienen las funciones dadas son muy bajas. Los cambios en aumentando en la precisión balanceada se deben a que el número de datos no es igual en ambas clases. Además, la precisión de estos clasificadores es muy inferior a la que obtenemos por la recta, así que lo que podemos concluir es que si fuésemos a considerar alguno de estos clasificadores para nuestro conjunto de datos, los resultados serían obviamente mucho peores que los del clasificador lineal inicial. Por tanto, hemos visto que añadir complejidad al mdelo no implica que los resultados vayan a mejorar, por lo que es mejor usar el \textbf{clasificador lineal}. Esto además tiene mucho sentido en este caso, pues sabemos de antemano que las etiquetas han sido generadas usando este modelo lineal.
+Como ya nos indicaban las gráficas, las \textbf{precisiones} que obtienen las funciones dadas son muy bajas. Los cambios en la precisión balanceada se deben a que el número de datos no es igual en ambas clases, pues la recta deja más puntos a un lado que al otro. Además, la precisión de estos clasificadores es muy inferior a la que obtenemos por la recta, así que lo que podemos concluir es que si fuésemos a considerar alguno de estos clasificadores para nuestro conjunto de datos, los resultados serían obviamente mucho peores que los del clasificador lineal inicial. Por tanto, hemos visto que añadir complejidad al mdelo no implica que los resultados vayan a mejorar, por lo que es mejor usar el \textbf{clasificador lineal}. Esto además tiene mucho sentido en este caso, pues sabemos de antemano que las etiquetas han sido generadas usando este modelo lineal.
 
 En cuanto al \textbf{ruido} que obtenemos en las etiquetas, debemos asumir que con datos reales esto es algo que pasará muy a menudo. Esto además influirá de forma muy directa en el aprendizaje, pues ocasiona que los datos \textbf{no sean separables} y tengamos que estar siempre tratando con aproximaciones o probabilidades de que nuestros clasificadores sean correctos, y obtener clasificadores que tengan error cero con datos reales es prácticamente imposible.
 
@@ -207,7 +208,7 @@ En cuanto al \textbf{ruido} que obtenemos en las etiquetas, debemos asumir que c
 
 En este apartado, estudiaremos el algoritmo \emph{PLA} para el problema de clasificación binaria. Este algoritmo recibe dos vectores $X,y$ con los datos y las etiquetas y devuelve los coeficientes del hiperplano que separa completamente los datos. \\
 
-Veamos este algoritmo en pseudocódigo. Si $h(x) = sign( w^T x + b)$ es la función que usamos para clasificar:
+Veamos este algoritmo en pseudocódigo. Si $h(x) = sign( w^T x + b)$ es la función que usamos para clasificar, y notamos momentáneamente como $y_x$ la etiqueta que corresponde al punto $x$, tenemos:
 
 
 \begin{algorithm}[H]
@@ -224,12 +225,12 @@ Veamos este algoritmo en pseudocódigo. Si $h(x) = sign( w^T x + b)$ es la funci
     }
    }
     \Return{w}
-   \caption{Algoritmo Perceptron ( $X$, $y$, $max_\iter$)}
+   \caption{Algoritmo Perceptron ( $X$, $y$, $maxIter$)}
   \end{algorithm}
   
 Como vemos, si la etiqueta que nuestros pesos están produciendo no es la correcta, esto es, si $h(x) \neq y_x$,  actualizamos en cada iteración $w$ de la forma:
 $$
-w(t+1) = w(t) + x \dot y_x,
+w(t+1) = w(t) + x \cdot y_x,
 $$
 y realizamos esta operación tantas veces como sea necesario hasta que no haya ningún cambio en los pesos, es decir, todos los puntos del conjunto de datos estén bien clasificados. Es claro que para que este algoritmo termine , los datos deben ser \textbf{linealmente separables} pues, de lo contrario, para cualesquiera pesos obtendríamos que existe un punto $x \in X$ para el cual $h(x) \neq y_x$, por lo que nuestro algoritmo iteraría indefinidamente. De hecho, se sabe que de por sí es un algoritmo muy costoso pues, si los datos son separables, encontrará la solución pero:
 
@@ -247,7 +248,7 @@ Una vez explicado, vamos a pasar a ejecutar el algoritmo. Lo hacemos primero usa
 \begin{itemize}
 \item Si inicializamos con el vector $w_0 = (0,0,0)$, obtenemos lo siguiente:
 \begin{lstlisting}[language=bash]
-  Pesos obtenidos para peso inicial [0,0,0]: [564. 65.01749303  50.37298718]
+  Pesos obtenidos para peso inicial [0,0,0]: [564.          65.01749303  50.37298718]
   Iteraciones para peso inicial [0,0,0]: 105
   Accuracy = 100.0
 \end{lstlisting}
@@ -255,14 +256,14 @@ Como podíamos esperar, el resultado es perfecto y el número de iteraciones es 
 
 \item Ahora, se pide que se inicialice el vector de pesos inicial $w_0$ con valores aleatorios entre $0$ y $1$. Para ello, usando \lstinline{np.random.uniform(0,1,3)} obtenemos esos vectores aleatorios (esta es la función que usa \lstinline{generate_uniform_data}, por lo que podríamos haberla usado). Se pide que se repita el experimento $10$ veces y se dé el valor medio de las ejecuciones, y el resultado obtenido es el siguiente:
 \begin{lstlisting}[language=bash]
-  Valor medio de iteraciones necesario para converger: 120.0
+  Valor medio de iteraciones necesario para converger: 112.7
   Valor medio de accuracy en pesos aleatorios: 100.0
-  La desviación típica en las iteraciones ha sido: 14.65, pues las iteraciones son: [97, 134, 134, 108, 111, 121, 150, 116, 111, 118]
+  La desviación típica en las iteraciones ha sido: 6.664082832618455, pues las iteraciones son: [110, 122, 109, 112, 111, 112, 107, 103, 127, 114]
 \end{lstlisting}
-Como podemos ver, se ha dado un muy leve incremento en el número de iteraciones necesarias para encontrar los mejores pesos, y tenemos una desviación típica de $\approx 15$, lo cual es alto por lo que no podemos indicar que inicializar los pesos aleatoriamente pueda ser mejor que inicializarlos a cero.
+Como podemos ver, se ha dado un muy leve incremento en el número de iteraciones necesarias para encontrar los mejores pesos, y tenemos una desviación típica de $\approx 6$, lo cual no es despreciable por lo que no podemos indicar que inicializar los pesos aleatoriamente pueda ser mejor que inicializarlos a cero, ya que no nos garantiza que tengamos menos iteraciones para encontrar la solución.
 \end{itemize}
 
-Vamos a analizar ahora el caso en el que usamos los \textbf{datos con ruido}. Usamos los datos y etiquetas obtenidos en el ejercicio anterior y vamos a ver qué ocurre y tratar de dar una explicación al resultado. Si ejecutamos el mismo código que antes pero con las etiquetas con ruido, obtenemos el siguuiente resultado:
+Vamos a analizar ahora el caso en el que usamos los \textbf{datos con ruido}. Usamos los datos y etiquetas obtenidos en el ejercicio anterior y vamos a ver qué ocurre y tratar de dar una explicación al resultado. Si ejecutamos el mismo código que antes pero con las etiquetas con ruido, obtenemos el siguiente resultado:
 
 \begin{lstlisting}[language=bash]
   Iteraciones para peso inicial [0,0,0]: 1000
@@ -334,12 +335,12 @@ Una vez que hemos plantado las condiciones, vamos a realizar el siguiente experi
 
 \item Aplicamos el algoritmo \lstlinline{sgdRL} que realiza la regresión logística para obtener los pesos de la recta que aproxima nuestros datos. Recordamos que en Gradiente descendente, la actualización de los pesos se hace en cada paso de la forma:
 $$
-w(t+1) = w(t) - \eta * \nabla E_{\operatorname{in}}(w).
+w(t+1) = w(t) - \eta \cdot \nabla E_{\operatorname{in}}(w).
 $$
 
-\item Generamos un conjunto de test $X_{\operatorname{test}}$ de $N_test = 1000$ puntos nuevos, y los etiquetamos con la misma función que etiquetamos los puntos que utilizamos para el entrenamiento.
+\item Generamos un conjunto de test $X_{\operatorname{test}}$ de $N_{\operatorname{test}} = 1000$ puntos nuevos, y los etiquetamos con la misma función que etiquetamos los puntos que utilizamos para el entrenamiento.
 
-\item Calculamos el error en el conjunto de testcon la función de error logística. 
+\item Calculamos el error en el conjunto de test con la función de error logística. 
 
 \end{enumerate}
 
@@ -353,10 +354,10 @@ Vamos a ejecutar el experimento una única vez para ver cómo ajusta la recta ob
 \end{figure}
 El ajuste como podemos ver es casi perfecto, aunque algún dato queda mal clasificado. Si mostramos por pantalla el error en la muestra, el resultado es:
 \begin{lstlisting}[language=bash]
-  El error en la muestra es de [0.08456819097661489]
-  Average results in 1 experiments: // Estas líneas se refieren a fuera de la muestra
-	 Iterations: 333.0
-	 Error: 0.10187873937789174
+  El error en la muestra es de [0.10090145751031432]
+  Average results in 1 experiments:
+         Iterations: 400.0
+         Error Eout: 0.09428134264702463
 \end{lstlisting}
 
 Lo cual nos indica que , como podíamos ver, es bajo pero no es cero. Esto es debido a que la diferencia entre los pesos en dos iteraciones ha sido muy pequeña aunque estos no ajusten perfectamente a los datos. Si le diésemos un número mayor de iteraciones o estableciésemos otra condición de parada con un epsilon menor, es posible que obtuviésemos un mejor ajuste de los datos, aunque con un mayor número de iteraciones. Aunque no sea el objetivo del ejercicio, se ha realizado una prueba de esto para ver si esto era cierto y el resultado es el siguiente:
@@ -365,19 +366,19 @@ Lo cual nos indica que , como podíamos ver, es bajo pero no es cero. Esto es de
   \centering
   \subfloat[Regresión Logística sobre conjunto de entrenamiento.]{\label{fig:a}\includegraphics[width=0.45\linewidth]{media/"LR vs Original-Train-eps0.005".pdf}}\qquad
   \subfloat[Regresión Logística fuera de la muestra de entrenamiento.]{\label{fig:b}\includegraphics[width=0.45\linewidth]{media/"LR vs Original-eps0.005".pdf}}
-  \caption{Regresión logística con epsilon menor. Iteraciones necesarias: $850$. }
+  \caption{Regresión logística con epsilon menor. Iteraciones necesarias: $1168$. }
   \label{fig:myfig:3}
 \end{figure}
-Se obtiene que el error en la muestra es $E_{in} = 0.053$ y el error en el conjunto de test es $E_{out} = 0.08$, ligeramente menores que en el caso anterior, aunque las iteraciones aumentan como vemos en el pie de la figura.\\
+Se obtiene que el error en la muestra es $E_{in} = 0.0971$ y el error en el conjunto de test es $E_{out} = 0.10273$ con lo que, aunque hemos mejorado el error en la muestra, hemos empeorado fuera de ella, se ha producido un sobreajuste (overfitting). Además, se han incrementado razonablemente las iteraciones, como vemos en el pie de la figura \ref{fig:myfig:3}.\\
 
 Por último, lo que haremos será \textbf{repetir este experimento} $N_{experiments} = 100$ veces y calcular la media de los errores fuera de la muestra y el número medio de iteraciones, para hacernos una idea de cómo de bien funciona la regresión logística sobre los datos generados de esta forma. El resultado de la ejecución de este experimento es el siguiente:
 \begin{lstlisting}[language=bash]
   Average results in 100 experiments:
-      Iterations: 424.61
-      Error out sample: 0.11801947037697608
+         Iterations: 414.95
+         Error out sample: 0.12018870542312315
 \end{lstlisting}
 
-Observamos que el número de iteraciones no es muy alto para obtener unos pesos que ajusten razonablemente bien nuestros datos incluso fuera de la muestra, obteniendo un error de $0.11$.
+Observamos que el número de iteraciones no es muy alto para obtener unos pesos que ajusten razonablemente bien nuestros datos incluso fuera de la muestra, obteniendo un error de $0.12$.
 
 \section*{Bonus - Clasificación de Dígitos}
 
@@ -418,7 +419,7 @@ Con estos elementos, queda bien definido nuestro problema y podemos pasar a expl
 \begin{enumerate}
 \item Como modelo de \textbf{regresión lineal}, utilizaremos el algoritmo de \textbf{pseudoinversa}, ya que lo utilizamos en la práctica anterior y, aunque no esté computado por la descomposición \emph{SVD}, para este conjunto de datos pequeño es más que suficiente el código que ya teníamos implementado.
 
-\item Aplicaremos posteriormente el algoritmo \lstlinline{PLA-Pocket}. Este no es más que el mismo \textbf{PLA} que hemos aplicado en los apartados anteriores, solo que almacenando \temph{"en el bolsillo"} el vector de pesos que se ha obtenido en alguna de las iteraciones y es el mejor en toda la muestra, es decir, el que menor error de clasificación nos proporciona. Esta solución, por supuesto, no soluciona el problema de que si los datos no son linealmente separables entonces no se encontrará el hiperplano separador. Sin embargo, se consigue que la solución no proporcione peores resultados conforme avanzan las iteraciones, es decir, no empeore con el tiempo.
+\item Aplicaremos posteriormente el algoritmo \lstlinline{PLA-Pocket}. Este no es más que el mismo \textbf{PLA} que hemos aplicado en los apartados anteriores, solo que almacenando \emph{``en el bolsillo''} el vector de pesos que se ha obtenido en alguna de las iteraciones y es el mejor en toda la muestra, es decir, el que menor error de clasificación nos proporciona. Esta solución, por supuesto, no soluciona el problema de que si los datos no son linealmente separables entonces no se encontrará el hiperplano separador. Sin embargo, se consigue que la solución no proporcione peores resultados conforme avanzan las iteraciones, es decir, no empeore con el tiempo.
 
 \end{enumerate}
 
@@ -432,7 +433,7 @@ Vamos primeramente a visualizar los conjuntos de entrenamiento y de test, para v
 \label{fig:myfig:4}
 \end{figure}
 
-Como podemos observar, estos datos son claramente \textbf{NO separables}. El algoritmo de \emph{pseudoinversa} nos proporcionará el mínimo teórico que podemos alcanzar. Sin ambargo, si quisiésemos aplicar aquí el algoritmo \lstinline{PLA} tendríamos un problema, pues nunca encontraríamos una solución debido a la no separabilidad de los datos. Es por ello que aplicar \lstinline{PLA-Pocket} ahora tiene bastante sentido, pues podemos apreciar si es una mejora al algoritmo \lstinline{PLA},pues este podría obtener una solución que sea razonablemente parecida a la que nos da el algoritmo de pseudoinversa. 
+Como podemos observar, estos datos son claramente \textbf{NO separables}. El algoritmo de \emph{pseudoinversa} nos proporcionará el mínimo teórico que podemos alcanzar según la minimización del riesgo empírico. Sin ambargo, si quisiésemos aplicar aquí el algoritmo \lstinline{PLA} tendríamos un problema, pues nunca encontraríamos una solución debido a la no separabilidad de los datos. Es por ello que aplicar \lstinline{PLA-Pocket} ahora tiene bastante sentido, pues podemos apreciar si es una mejora al algoritmo \lstinline{PLA},ya que este podría obtener una solución que sea razonablemente parecida a la que nos da el algoritmo de pseudoinversa al ser capaz de guardar el mejor de los pesos. 
 
 Primero, observamos cómo se comporta el algoritmo de pseudoinversa sobre los datos:
 \begin{figure}[H]
@@ -442,13 +443,15 @@ Primero, observamos cómo se comporta el algoritmo de pseudoinversa sobre los da
   \caption{Clasificación usando pseudoinversa en train y test.}
 \label{fig:myfig:4}
 \end{figure}
-Además, podemos calcular el \emph{accuracy} en ambos conjuntos para pseudoinversa, para en el futuro comparar. El resultado es:
+Además, podemos calcular el \emph{porcentaje de error} en ambos conjuntos para pseudoinversa, para en el futuro comparar. El resultado es:
 \begin{lstlisting}[language=bash]
-  El porcentaje de acierto de pseudoinversa es:
-    Train: 0.7721943048576214
-    Test: 0.7486338797814208
+  El porcentaje de error de pseudoinversa es:
+	 Train: 22.78057%
+	 Test: 25.13661%
 \end{lstlisting}
-Los resultados no son tan buenos como serían si los datos fuesen separables. Vamos a ver qué ocurre cuando ejecutamos el algoritmo \lstinline{PLA-Pocket}. Como sabemos que los datos son no separables, realizamos una implementación de este algoritmo que solo tiene en cuenta que se haga el número máximo de iteraciones y se devuelven los pesos que dan menor error. Comenzamos inicializando los pesos del algoritmo de forma aleatoria. Hay que notar que el tiempo de ejecución aumenta muy considerablemente, al tener que estar calculando cada vez que se modifica el vector de pesos $w$ el error sobre la muestra para ver si es el mejor vector de pesos actual. Es por ello que reducimos el número de iteraciones a realizar a un máximo de 500. El resultado gráfico es el siguiente:
+Los resultados no son tan buenos como serían si los datos fuesen separables, tenemos un error de casi 1 de cada 4 datos, lo cual es bastante elevado.\\
+
+Vamos a ver qué ocurre cuando ejecutamos el algoritmo \lstinline{PLA-Pocket}.  Comenzamos inicializando los pesos del algoritmo de forma aleatoria. A priori, como los datos no son separables, ya sabemos que el algoritmo no va a encontrar ningún hiperplano que nos de error cero. Sin embargo, es interesante ver cuánto se acerca este algoritmo a la solución dada por la pseudoinversa. El resultado gráfico es el siguiente:
 \begin{figure}[H]
   \centering
   \subfloat[Clasificación usando PLA-Pocket en train.]{\label{fig:a}\includegraphics[width=0.45\linewidth]{media/"PLA-Pocket-Random-Ini-train".pdf}}\qquad
@@ -457,15 +460,100 @@ Los resultados no son tan buenos como serían si los datos fuesen separables. Va
 \label{fig:myfig:4}
 \end{figure}
 
-Podemos ver como el ajuste parece también razonablemente bueno. Podemos ver el error tanto en la muestra como en el conjunto de test que produce el algoritmo:
+Podemos ver como el ajuste parece también razonablemente bueno, parecido al del algoritmo anterior. Podemos ver el error tanto en la muestra como en el conjunto de test que produce el algoritmo:
 \begin{lstlisting}[language=bash]
-  El porcentaje de acierto de PLA-Pocket pesos iniciales aleatorios es:
-    Train: 0.7897822445561139
-    Test: 0.7486338797814208
+  El porcentaje de error de PLA-Pocket pesos iniciales aleatorios es:
+        Train: 22.61307%
+        Test: 25.68306%
 \end{lstlisting}
-Como podemos apreciar, hemos mejorado un poco el porcentaje de acierto y hemos mantenido el
 
-Por último, una buena idea para \lstinline{PLA-Pocket} puede ser inicializar el algoritmo con los pesos que nos proporciona la regresión lineal y ver si es capaz de mejorar estos
+Este algoritmo obtiene unos errores muy parecidos al caso anterior. 
+Como podemos apreciar, hemos mejorado un poco el porcentaje de acierto  en el conjunto de train y hemos mantenido el error en el conjunto de test. Como las rectas son visualmente
+prácticamente idénticas y el número de puntos en el conjunto de test no es muy grande, estos resultados son lógicos.
+
+Por último, una buena idea para \lstinline{PLA-Pocket} puede ser inicializar el algoritmo con los pesos que nos proporciona la regresión lineal y ver si es capaz de mejorar los resultados 
+que esta regresión ha obtenido. A priori, parece una buena idea comenzar directamente con unos pesos que sean razonablemente buenos, guardarlos como los mejores e ir haciendo modificaciones pequeñas sobre ellos para ver si se encuentran algunos que sean mejores dentro de la muestra, y luego probarlos a ver qué tal se comportan fuera de la muestra.  Tras ejecutar el código anterior pero inicializando con los pesos que nos da el algoritmo de pseudoinversa, el resultado es el siguiente:
+\begin{lstlisting}[language=bash]
+  El porcentaje de error de PLA-Pocket pesos iniciales dados por pseudoinversa es:
+         Train: 22.52931%
+         Test: 25.40984%
+\end{lstlisting}
+
+%Como vemos, el resultado es exactamente el mismo en el caso anterior. Podemos ver los pesos que devuelven los algoritmos:
+%%\begin{lstlisting}[language=bash]
+%%  Pesos pseudoinversa: [-0.50676351  8.25119739  0.44464113]
+%%  Pesos PLA: [ -7.27402697 138.48932567   7.61929994]
+%%  Pesos Pseudo+PLA :[ -8.50676351 163.00130454   8.99007863]  
+%%\end{lstlisting}
+%Los pesos son diferentes en todos los casos, pero aún así los resultados que obtenemos son bastante parecidos o iguales. De hecho, si dibujamos las rectas que hemos obtenido en este caso:
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Clasificación usando Pseudoinversa + PLA-Pocket en train.]{\label{fig:a}\includegraphics[width=0.45\linewidth]{media/"PLA-Pocket-Pseudo-Ini-train".pdf}}\qquad
+  \subfloat[Clasificación usando Pseudoinversa +PLA-Pocket en test.]{\label{fig:b}\includegraphics[width=0.45\linewidth]{media/"PLA-Pocket-Pseudo-Ini-test".pdf}}
+  \caption{Clasificación usando PLA-Pocket, con inicialización con pesos iniciales de pseudoinversa, en train y test.}
+\label{fig:myfig:5}
+\end{figure}
+Podemos ver que son prácticamente iguales a las anteriores a simple vista. Para ver esto mejor, vamos a realizar el gráfico de las 3 rectas juntas para ver qué resultado obtenemos:
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Todas las rectas en train.]{\label{fig:a}\includegraphics[width=0.45\linewidth]{media/"Comparacion-Bonus-train".pdf}}\qquad
+  \subfloat[Todas las rectas en test.]{\label{fig:b}\includegraphics[width=0.45\linewidth]{media/"Comparacion-Bonus-test".pdf}}
+  \caption{Rectas obtenidas por regresión lineal, PLA-Pocket (inicialización aleatoria), y PLA-Pocket (inicialización con pesos de regresión) .}
+\label{fig:myfig:6}
+\end{figure}
 
 
+\subsubsection*{Cotas del error $E_{\operatorname{out}}}$}
+
+Nos quedaría por calcular las cotas sobre el verdadero valor de $E_{\operatorname{out}}$, basándonos tanto en $E_{\operatorname{in}}$ como en $E_{\operatorname{test}}$.  Para esto, aplicaremos primero la desigualdad de Hoeffding que sabemos que, dado $N$ el tamaño del conjunto de datos y $\delta > 0$ el nivel de confianza, tenemos que:
+$$
+E_{\operatorname{out}}(g) \leq E_{\operatorname{in}}(g) + \sqrt{\frac{1}{2N} \log \frac{2 \abs{\mathcal H}}{ \delta}}
+$$
+con probabilidad mayor o igual que $1- \delta$.
+
+Vamos a aplicarla a nuestro caso. Basándonos primero en el error en la muestra $E_\operatorname{in}$, tenemos que el tamaño de la clase de funciones es infinito, por lo que a priori no podríamos calcular esta cota. Sin embargo, al estar trabajando con nuestro ordenador y sabiendo que cada flotante en nuestro ordenador son $64$ bits, entonces podemos decir que $\abs{H} \approx 2^{64\dot 3}$, pues utilizamos 3 valores reales para los vectores de pesos. Por tanto, podemos programar la cota con la siguiente función simple:
+
+\begin{lstlisting}[language=Python]
+  def Hoeffding_bound(in_sample_error,N,card_h = 2**(64*3),delta = 0.005):
+    return in_sample_error + np.sqrt( (1/2*N) * np.log( (2*card_h)/delta) )
+\end{lstlisting}
+
+Cada uno de los vectores de pesos nos proporciona unos errores en la muestra como hemos visto anteriormente. Si ejecutamos esta desigualdad usando el error en la muestra, con el $N$ que hemos indicado en el enunciado del problema, el resultado que obtenemos es el siguiente:
+\begin{lstlisting}
+  Cota del error E_out por desigualdad de Hoeffding usando E_in según algoritmo:
+    Pseudoinversa: E_out <= 0.46713
+    PLA-Pocket-Random inicialización: E_out <= 0.46713
+    PLA-Pocket-Pseudoinversa inicialización: E_out <= 0.46462
+\end{lstlisting}
+Donde vemos que el algoritmo \lstinline{PLA-Pocket} mejora un poco la cota del algoritmo de pseudoinversa, pues partiendo del mismo hiperplano que esta, intenta seguir minimizando usando un error diferente al error cuadrático medio que es el que se minimiza con la pseudoinversa. 
+
+Ahora, veamos qué ocurre si acotamos el error fuera de la muestra mediante el error en el conjunto de test. Para ello, calculamos el error $E_{\operatorname{test}}$ con cada uno de los algoritmos y, como en test ya hemos escogido la función objetivo $g$ pues ya tenemos los pesos seleccionados, tenemos que indicar  pues la clase de funciones ahora tiene una única función, es decir $\abs{\mathcal H} = 1$. Además, tenemos que cambiar el $N$ pues el conjunto de datos de test tiene muchos menos datos que el conjunto de entrenamiento, así que también le indicamos a la función que $N = \abs{x\_test}$. Las cotas obtenidas son:
+\begin{lstlisting}
+  Cota del error E_out por desigualdad de Hoeffding usando E_test  según algoritmo:
+    Pseudoinversa: E_out <= 0.32236
+    PLA-Pocket-Random inicialización: E_out <= 0.32236
+    PLA-Pocket-Pseudoinversa inicialización: Cota <= 0.32509
+\end{lstlisting}
+
+Claramente, debido a que la raíz que estamos sumando ahora es mucho más pequeña por serlo $\abs{\mathcal H} = 1$, por lo que ese sumando se reduce mucho y por tanto el error la cota dada es inferior, además de que hemos visto anteriormente que el error en los conjuntos de train y de test es bastante similar, lo que hace al primer término de ambas desigualdades (una usando $E_{\operatorname{in}}$ y otra usando $E_\operatorname{test})$) de valor muy similar.
+
+Hemos estudiado en teoría también la \textbf{cota general de Vapnik-Chervonenkis (VC)}. Podemos aplicarla también a este caso y compararla con la anterior.Sabemos que, dado un nivel de tolerancia $\delta$, que nosotros fijaremos como $\delta = 0.05$, esta cota está está dada por:
+$$
+E_{\operatorname{out}}(g) \leq E_{\operatorname{in}}(g) + \sqrt{ \frac{8}{N}} \log \left( \frac{4((2N)^{d_{VC}}+ 1)}{\delta}\right)
+$$
+con probabilidad mayor o igual que $1 - \delta$, siendo $N$ el tamaño de la muestra, $d_{VC}$ la dimensión VC de nuestra clase de funciones utilizada para obtener la clasificación. En nuestro caso, como estamos usando un algoritmo Perceptron en 2 dimensiones, sabemos que esta dimensión es $d_{VC} = 3$. El código para esta cota es bastante sencillo también:
+\begin{lstlisting}[language=Python]
+  def VC_bound(in_sample_error, N, d_vc,delta = 0.05):
+    return in_sample_error + np.sqrt((8 / N) * np.log(4 * ((2 * N) ** d_vc + 1) / delta))
+\end{lstlisting}
+Y, si lo aplicamos a nuestros 3 algoritmos usando el error en la muestra, obtenemos:
+\begin{lstlisting}[language=bash]
+  Cota VC del error E_out según algoritmo:
+    Pseudoinversa: Cota = 0.65874
+    PLA-Pocket-Random inicialización: Cota = 0.66125
+    PLA-Pocket-Pseudoinversa inicialización: Cota = 0.64115
+\end{lstlisting}
+Como vemos, nos queda una cota bastante peor que la que habíamos obtenido anteriormente, aunque sepamos que en general esta pueda ser aplicada en más casos.
 \end{document}
