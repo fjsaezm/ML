@@ -583,7 +583,7 @@ def experiment(N_experiments = 100,N_train = 100,N_test = 1000, epsilon = 0.01):
 
     
         
-    return np.array(avg_iterations),np.array(avg_error)
+    return np.array(avg_iterations),np.array(avg_error),np.array(avg_error_train)
 
 
 
@@ -593,19 +593,18 @@ def experiment(N_experiments = 100,N_train = 100,N_test = 1000, epsilon = 0.01):
 # Experimento único epsilon  = 0.01
 print("Ejecución de SGDRL con epsilon = 0.01, como se indica")
 N_experiments = 1
-iters,error = experiment(N_experiments = N_experiments)
+iters,error,_ = experiment(N_experiments = N_experiments)
 print("Average results in {} experiments:".format(N_experiments))
 print("\t Iterations: {}".format(np.mean(iters)))
 print("\t Error E_out: {}".format(np.mean(error)))
-
 
 # In[23]:
 
 
 # Experimento único epsilon  = 0.005
-print("Ejecución de SGDRL con epsilon = 0.005, como experimento")
+print("\nEjecución de SGDRL con epsilon = 0.005, como experimento")
 N_experiments = 1
-iters,error = experiment(N_experiments = N_experiments,epsilon = 0.005)
+iters,error,_ = experiment(N_experiments = N_experiments,epsilon = 0.005)
 print("Average results in {} experiments:".format(N_experiments))
 print("\t Iterations: {}".format(np.mean(iters)))
 print("\t Error E_out: {}".format(np.mean(error)))
@@ -616,12 +615,16 @@ print("\t Error E_out: {}".format(np.mean(error)))
 
 # Usar la muestra de datos etiquetada para encontrar nuestra solución g y estimar Eout
 # usando para ello un número suficientemente grande de nuevas muestras (>999).
-print("Ejecutando 100 experimentos de regresión logística y calculando medias...")
+print("\nEjecutando 100 experimentos de regresión logística y calculando medias...")
 N_experiments = 100
-iters,error = experiment(N_experiments = N_experiments)
+iters,error,error_in = experiment(N_experiments = N_experiments)
 print("Average results in {} experiments:".format(N_experiments))
 print("\t Iterations: {}".format(np.mean(iters)))
 print("\t Error out sample: {}".format(np.mean(error)))
+print("\t Error in sample: {}".format(np.mean(error_in)))
+print("\nDesviación típica iteraciones: {}".format(np.std(iters)))
+print("Desviación típica E_out: {}".format(np.std(error)))
+
 
 
 # In[133]:
@@ -845,6 +848,13 @@ print("\t PLA-Pocket-Pseudoinversa inicialización: Cota <= {:0.5f}".format(hoef
 
 # In[106]:
 
+
+def error(X, y, w):
+    incorrect = [sign(x.dot(w)) for x in X] != y
+    return np.mean(incorrect)
+
+# Cambiamos de nuevo el N para que sea el conjunto de entrenamiento
+N = len(x)
 
 d_VC_PLA = 3
 bound_pseudo = VC_bound(error(x,y,w_pseudo),N,d_VC_PLA)
