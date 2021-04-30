@@ -117,7 +117,7 @@ Generamos de nuevo 50 valores en dos dimensiones. Para ello, se nos indica que $
 Como podemos ver, prácticamente la totalidad de los datos se encuentran en los intervalos conformados por 3 veces las desviaciones típicas de cada eje, esto es: $[-3 \sigma_x,3 \sigma_x] \times [-3 \sigma_y , 3 \sigma_y]$, como es esperado en esta distribución.\\
 
 
-Una vez que hemos obtenido nuestros datos, vamos a proporcionarles unas etiquetas y vamos a introducir ruido en estos datos. Vamos primero a asignarle las etiquetas. Para ello, vamos generar una recta aleatoria usando la función dada (a la que le hemos cambiado el nombre) \lstlinlne{generate_line(interval)} a la que le pasamos un intervalo $interval = [c,d]$, genera dos puntos en $\mathbb R^2$ dentro del cuadrado $[c,d]\times [c,d]$ y devuelve la pendiente $(a)$ y el término independiente $(b)$ de la recta que pasa por ellos. Una vez tenemos estos dos valores, sabemos que la recta es simplemente:
+Una vez que hemos obtenido nuestros datos, vamos a proporcionarles unas etiquetas y vamos a introducir ruido en estos datos. Vamos primero a asignarle las etiquetas. Para ello, vamos generar una recta aleatoria usando la función dada (a la que le hemos cambiado el nombre) \lstlinlne{generate\_line(interval)} a la que le pasamos un intervalo $interval = [c,d]$, genera dos puntos en $\mathbb R^2$ dentro del cuadrado $[c,d]\times [c,d]$ y devuelve la pendiente $(a)$ y el término independiente $(b)$ de la recta que pasa por ellos. Una vez tenemos estos dos valores, sabemos que la recta es simplemente:
 $$
 y = ax + b.
 $$
@@ -132,7 +132,7 @@ Se considera que los puntos que están sobre la recta son de la clase del $1$. S
   \caption{$100$ datos etiquetados mediante la separación por una recta aleatoria.}
 \end{figure}
 
-Nos toca entonces introducir ruido en estos datos.  Para ello, simplemente tomamos el vector de etiquetas \lstinline{y} de nuestros datos, obtenemos los índices de las etiquetas positivas  y de esas seleccionamos aleatoriamente un $10\%$ y las cambiamos a negativas. Hacemos lo mismo con las negativas. Esto se hace en la función \lstlinlne{generate_noise}, cuyo código es simple:
+Nos toca entonces introducir ruido en estos datos.  Para ello, simplemente tomamos el vector de etiquetas \lstinline{y} de nuestros datos, obtenemos los índices de las etiquetas positivas  y de esas seleccionamos aleatoriamente un $10\%$ y las cambiamos a negativas. Hacemos lo mismo con las negativas. Esto se hace en la función \lstlinlne{generate\_noise}, cuyo código es simple:
 
 \begin{lstlisting}[language=Python]
   def generate_noise(y,per = 0.1):
