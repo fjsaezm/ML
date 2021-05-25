@@ -169,8 +169,8 @@ Estas serán nuestras nuevas funciones frontera de clasificación para la muestr
 
 \begin{figure}[H]
   \centering
-  \subfloat[Primera elipse]{\label{fig:a}\includegraphics[width=0.45\linewidth]{media/"Elipse 1".pdf}}\qquad
-  \subfloat[Segunda elipse]{\label{fig:b}\includegraphics[width=0.45\linewidth]{media/"Elipse 2".pdf}}\\
+  \subfloat[Primera elipse]{\label{fig:a}\includegraphics[width=0.45\linewidth]{media/Elipse1.pdf}}\qquad
+  \subfloat[Segunda elipse]{\label{fig:b}\includegraphics[width=0.45\linewidth]{media/Elipse2.pdf}}\\
   \subfloat[Hipérbola]{\label{fig:c}\includegraphics[width=0.45\textwidth]{media/"Hipérbola".pdf}}\qquad%
   \subfloat[Parábola]{\label{fig:d}\includegraphics[width=0.45\textwidth]{media/"Parábola".pdf}}%
   \caption{Fronteras de clasificación. En verde zona positiva. En rojo, negativa.}
@@ -344,6 +344,10 @@ $$
 
 \end{enumerate}
 
+Para este ejercicio podía haber dos interpretaciones: o bien fijar el conjunto de test y la recta que genera los datos , y generar en cada iteracion solamente nuevos conjuntos de entrenamiento, o generar en cada iteración nuevos conjuntos de entrenamiento, nueva recta y nuevo conjunto de test. Hemos elegido la segunda forma.\\
+
+Elegimos esta forma de realizar el experimento generando en cada iteración nuevos datos de entrenamiento pues tiene más interés que el otro caso, ya que si fijásemos tanto una recta como un conjunto de test, los resultados que se obtendrían serían más bien \emph{relativos} a cómo actúa la regresión logística respecto a esa recta fijada y ese conjunto de test fijado (aunque arbitrario). Sin embargo, al elegir \textbf{variar} tanto la recta como el conjunto de test, consideramos que se obtiene una idea más general de cómo de bien funciona esta regresión logística cuando los todos los conjuntos son arbitrarios, y la información que nos da es relativa a cómo se comporta en general la regresión logística cuando tenemos unos datos distribuidos de manera uniforme, caso más general que el anterior.
+
 Vamos a ejecutar el experimento una única vez para ver cómo ajusta la recta obtenido al conjunto de datos de test $X_{\operatorname{test}}$. El resultado  tanto dentro como fuera de la muestra es el siguiente:
 \begin{figure}[H]
   \centering
@@ -378,7 +382,24 @@ Por último, lo que haremos será \textbf{repetir este experimento} $N_{experime
          Error out sample: 0.12018870542312315
 \end{lstlisting}
 
-Observamos que el número de iteraciones no es muy alto para obtener unos pesos que ajusten razonablemente bien nuestros datos incluso fuera de la muestra, obteniendo un error de $0.12$.
+\newpage
+Observamos que el número de iteraciones no es muy alto para obtener unos pesos que ajusten razonablemente bien nuestros datos incluso fuera de la muestra, obteniendo un error de $0.12$. Esta información es bastante escueta, así que decidimos imprimir por pantalla también los siguientes datos.
+
+\begin{lstlisting}
+Average Error in sample: 0.1095453701333863
+Desviación típica iteraciones: 77.46565367955014
+Desviación típica E_out: 0.02063634008621514
+\end{lstlisting}
+
+Vemos qué nos dice cada uno:
+\begin{itemize}
+  \item Que el error medio en la muestra $E_{\operatorname{in}}$ sea de $0.109$ nos indica que por lo general la muestra no es fácil de ajustar. Además, podemos ver que el error medio en la muestra no queda muy lejos del error medio fuera de la media , lo que nos indica que el ajuste que estamos haciendo generaliza razonablemente bien.
+  
+  \item Tenemos que la desviación típica de las iteraciones es $\approx 77$. Esto nos indica que hay un rango grande de iteraciones que tarda el algoritmo en converger. Esto es debido a que hay muestras que deben ser bastante más complicadas de ajustar que otras.
+  \item Por último, tenemos una desviación típica del error fuera de la muestra $E_{\operatorname{out}} $ de aproximadamente $0.02$. Esto indica que todos los pesos que obtenemos como resultado de la regresión logística ajustan razonablemente bien fuera de la muestra, no hay unos que ajusten muy bien y otros que ajusten muy mal.
+\end{itemize}
+
+Como conclusión a estos datos obtenidos, podemos decir que nuestro modelo en este tipo de distribuciones consigue generalizar de forma bastante correcta.
 
 \section*{Bonus - Clasificación de Dígitos}
 
@@ -498,8 +519,8 @@ Podemos ver que son prácticamente iguales a las anteriores a simple vista. Para
 
 \begin{figure}[H]
   \centering
-  \subfloat[Todas las rectas en train.]{\label{fig:a}\includegraphics[width=0.45\linewidth]{media/"Comparacion-Bonus-train".pdf}}\qquad
-  \subfloat[Todas las rectas en test.]{\label{fig:b}\includegraphics[width=0.45\linewidth]{media/"Comparacion-Bonus-test".pdf}}
+  \subfloat[Todas las rectas en train.]{\label{fig:a}\includegraphics[width=0.45\linewidth]{media/compBonusTrain.pdf}}\qquad
+  \subfloat[Todas las rectas en test.]{\label{fig:b}\includegraphics[width=0.45\linewidth]{media/compBonusTest.pdf}}
   \caption{Rectas obtenidas por regresión lineal, PLA-Pocket (inicialización aleatoria), y PLA-Pocket (inicialización con pesos de regresión) .}
 \label{fig:myfig:6}
 \end{figure}
