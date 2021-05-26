@@ -39,13 +39,13 @@ if SAVE:
 plt.show()
 wait()
 
-# Matriz de correlacoines
+# Correlation Matrix
 df = pd.DataFrame(X_train,columns = np.arange(X_train.shape[1]))
-corr_matrix = df.corr()
+cov_matrix = df.cov()
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
-cax = ax.matshow(corr_matrix,cmap = 'coolwarm',vmin = 0,vmax = 1)
+cax = ax.matshow(cov_matrix,cmap = 'coolwarm',vmin = 0,vmax = 1)
 fig.colorbar(cax)
 ticks = np.arange(0,X_train.shape[1],1)
 ax.set_xticks(ticks)
@@ -54,11 +54,10 @@ ax.set_yticks(ticks)
 plt.show()
 wait()
 
-exit()
-
-sn.heatmap(corr_matrix,annot = False);
 if SAVE:
-    plt.savefig("media/corr_matrix.pdf")
+    plt.savefig("media/cov_matrix.pdf")
+    
+zero = df.iloc[[0]].to_numpy()[0]
+print("Standard deviation of the first element of the dataset {}".format(zero.std()))
 
-plt.show()
-wait()
+

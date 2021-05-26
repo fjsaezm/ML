@@ -255,6 +255,13 @@ Dibujamos ahora un gráfico en el que mostramos el diagrama de caja de los posib
   \caption{Diagrama de caja de las temperaturas $T_c$ en el conjunto de entrenamiento.}
 \end{figure}
 
+Como podemos ver, aunque tenemos variabilidad en los valores de $f$, tenemos la mayoría de estos concentrados en el intervalo $[0,50]$, lo cual nos indica que hay probabilidad de que los datos no sean separables o tengamos ruido en nuestra muestra. Como podemos ver, tenemos un dato que se aleja mucho de $1.5$ por el rango intercuartílico, que es lo que representan los \emph{bigotes} del diagrama de caja. Es por ello que podemos decir que este punto es posiblemente un \emph{outlier}.
+
+En cuanto a los valores de nuestros datos, si tomamos el primer elemento y calculamos la desviación típica $\sigma$ y el resultado que obtenemos es:
+\begin{lstlisting}[lang = Python]
+  Standard deviation of the first element of the dataset 2747.992
+\end{lstlisting}
+Por lo que obtenemos que claramente los valores de los diferentes atributos no están en el mismo rango de escala. Es por ello que previamente al entrenamiento realizaremos una estandarización por atributos de nuestro conjunto de datos.
 
 \newpage
 \printbibliography
