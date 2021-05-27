@@ -213,7 +213,7 @@ Trataremos primero el problema de regresión y posteriormente el de clasificaci�
 
 Lo primero que debemos hacer es realizar una buena comprensión de la información que tenemos sobre los datos para comprender un poco más nuestro problema.
 
-Nuestro primer conjunto de datos, \cite{superdata}, contiene características de ciertos elementos superconductores. Junto con estas características, se nos presenta una \emph{temperatura crítica}, que en el artículo en el que se estudia el conjunto de datos de manera más profunda \cite{hamidieh} lo denominan $T_c$, obtenida para un superconductor que posea estas características. También se nos presenta un archivo en el que se nos dan las fórmulas químicas de los superconductores, pero este archivo no será relevante para nosotros.
+Nuestro primer conjunto de datos, \cite{superdata}, contiene características de ciertos elementos superconductores. Junto con estas características, se nos presenta una \emph{temperatura crítica}, que en \cite{hamidieh} lo denominan $T_c$ siendo un problema similar al que vamos a abordar, obtenida para un superconductor que posea estas características. También se nos presenta un archivo en el que se nos dan las fórmulas químicas de los superconductores, pero este archivo no será relevante para nosotros.
 
 Lo primero que nos encontramos acerca de nuestros datos es la siguiente tabla:
 \begin{table}[h]
@@ -234,7 +234,7 @@ Con la información proporcionada podemos decir que:
 
 \begin{enumerate}
 \item Nuestro conjunto de datos de entrenamiento será
-  $$\mathcal X = \{ X_i \in \R^{81}, \text{ con } i = 1, \dots , 21263 \}.$$
+  $$\mathcal X = \{ x_i \in \R^{81}, \text{ con } i = 1, \dots , 21263 \}.$$
 
 \item Nuestro conjunto de etiquetas, puesto que no se nos indica ninguna restricción sobre las temperaturas, podemos asumir que es:
   $$
@@ -258,10 +258,44 @@ Dibujamos ahora un gráfico en el que mostramos el diagrama de caja de los posib
 Como podemos ver, aunque tenemos variabilidad en los valores de $f$, tenemos la mayoría de estos concentrados en el intervalo $[0,50]$, lo cual nos indica que hay probabilidad de que los datos no sean separables o tengamos ruido en nuestra muestra. Como podemos ver, tenemos un dato que se aleja mucho de $1.5$ por el rango intercuartílico, que es lo que representan los \emph{bigotes} del diagrama de caja. Es por ello que podemos decir que este punto es posiblemente un \emph{outlier}.
 
 En cuanto a los valores de nuestros datos, si tomamos el primer elemento y calculamos la desviación típica $\sigma$ y el resultado que obtenemos es:
-\begin{lstlisting}[lang = Python]
+\begin{lstlisting}[language = Python]
   Standard deviation of the first element of the dataset 2747.992
-\end{lstlisting}
-Por lo que obtenemos que claramente los valores de los diferentes atributos no están en el mismo rango de escala. Es por ello que previamente al entrenamiento realizaremos una estandarización por atributos de nuestro conjunto de datos.
+\end{lstlisting}Por lo que obtenemos que claramente los valores de los diferentes atributos no están en el mismo rango de escala. Es por ello que previamente al entrenamiento realizaremos una estandarización por atributos de nuestro conjunto de datos.
+
+\subsection{La clase de funciones $\mathcal H$}
+
+La clase de funciones a utilizar en este caso viene impuesta por el enunciado del ejercicio. En este caso, utilizaremos la clase de las funciones lineales:
+$$
+\mathcal H = \{ h(x) = w^t x \ : \ w \in R^{n+1}\}.
+$$
+Tenemos que destacar que, aunque se podría plantear aplicar funciones no lineales a las características dadas (ejemplo $\phi :\R^d \to \R^{k}$ dada por $\phi(x) = (1,x_1,\cdots,x_n,x_1x_1,x_1x_2,\cdots,x_dx_d)$, no se hace en este caso pues estaríamos añadiendo ua complejidad a la clase de funciones sin saber realmente si esto sería útil de cara a la generalización o no. Es por ello que, al no tener en la información sobre los datos que se nos proporciona ningún motivo para hacerlo, se decide no aplicar ninguna transformación de este estilo a los datos.
+
+\subsection{Conjuntos de entrenamiento, validación y test}
+
+En este problema, tenemos un conjunto suficientemente grande de datos, que no viene previamente separado en subconjuntos de entrenamiento y test. En concreto, hemos mencionado ya que $N = 21263$ datos. Es por ello que se ha decidido usar un conjunto de entrenamiento con el $70\%$ de los datos, y dejar el $30\%$ para el conjunto de test. Para ello nos aprovechamos de la función \lstinline{train\_test\_split} de \lstinline{sklearn}.
+
+Para elegir en nuestro conjunto de hipótesis antes de evaluar la función elegida en el conjunto de test, utilizaremos la conocida técnica \textbf{K-Fold Cross Validation}.
+
+Esta técnica consiste en realizar los siguientes pasos:
+\begin{algorithm}[H]
+  \SetAlgoLined
+  \KwResult{Average $E_{out}$ in the $k$ folds}º
+  parametros: $\eta$, $f$, $max\_iteraciones$,$criterio\_parada$, $punto\_inicial$ \;
+
+  $punto  \leftarrow punto\_inicial$ \;
+  \While{No (Criterio de parada)}{
+    $gradiente \leftarrow \nabla f(punto)$ \;
+    $direccion \leftarrow - gradiente$ \;
+    $punto \leftarrow punto - \eta \cdot direccion$
+  }
+  \caption{K-Fold Cross Validation}
+\end{algorithm}
+\begin{enumerate}
+\item Dividir el conjunto de entrenamiento en $k$ subconjuntos del mismo tamaño, digamos $N_{train}/k$.
+\item Para cada subconjunto:
+  \
+\end{enumerate}
+
 
 \newpage
 \printbibliography
