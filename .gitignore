@@ -5,4 +5,4 @@ texput
 *.log
 P2/datos/
 *.rar
-P2/media/
+P2/media/*

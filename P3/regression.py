@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt 
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 import seaborn as sn
 
 np.random.seed(1)
@@ -60,4 +61,16 @@ if SAVE:
 zero = df.iloc[[0]].to_numpy()[0]
 print("Standard deviation of the first element of the dataset {}".format(zero.std()))
 
+
+print("Preprocessing...")
+
+def preprocess_data(X,y):
+    Xc, yc = X.copy(),y.copy()
+    scaler = StandardScaler()
+    # Standardization
+    for j in range(0,X.shape[1]):
+        Xc[:j] = scaler.fit_transform(Xc[:j])
+        
+        
+    return Xc,yc
 

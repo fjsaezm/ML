@@ -276,26 +276,40 @@ En este problema, tenemos un conjunto suficientemente grande de datos, que no vi
 
 Para elegir en nuestro conjunto de hipótesis antes de evaluar la función elegida en el conjunto de test, utilizaremos la conocida técnica \textbf{K-Fold Cross Validation}.
 
-Esta técnica consiste en realizar los siguientes pasos:
+Esta técnica consiste en, si llamamos $X_{train}$ al conjunto de entrenamiento, realizar los siguientes pasos:
 \begin{algorithm}[H]
   \SetAlgoLined
-  \KwResult{Average $E_{out}$ in the $k$ folds}º
-  parametros: $\eta$, $f$, $max\_iteraciones$,$criterio\_parada$, $punto\_inicial$ \;
-
-  $punto  \leftarrow punto\_inicial$ \;
-  \While{No (Criterio de parada)}{
-    $gradiente \leftarrow \nabla f(punto)$ \;
-    $direccion \leftarrow - gradiente$ \;
-    $punto \leftarrow punto - \eta \cdot direccion$
-  }
   \caption{K-Fold Cross Validation}
-\end{algorithm}
-\begin{enumerate}
-\item Dividir el conjunto de entrenamiento en $k$ subconjuntos del mismo tamaño, digamos $N_{train}/k$.
-\item Para cada subconjunto:
-  \
-\end{enumerate}
+  \begin{algorithmic}[1]
+  \State $Vector_Eouts = []$
+  \For{i \in 1,...,k}
+    \State $ Datos_{val} \gets Particion_i$
+    \State $ Datos_{train} \gets X_train \backslash Particion _i$
+    \State $ Pesos \gets $ Entrenamiento en $Datos_{train}$
+    \State $ Vector_Eouts \gets Error(Pesos, Datos_{val})$
 
+  \EndFor
+
+  \State \textbf{return} Average $Vector_Eouts$
+  
+  \end{algorithmic}
+\end{algorithm}
+
+Describiéndolo en pocas palabras, diríamos que partimos el conjunto de entrenamiento en $k$ subconjuntos y en cada iteración entrenamos nuestro modelo
+con $k-1$ particiones y calculamos el error ``fuera de la muestra'' usando la partición restante. Hacemos eso con todas las particiones y devolvemos una media de
+los errores fuera de la muestra que hemos obtenido. Les decimos errores fuera de la muestra porque se calculan usando puntos no usados \textbf{en esa iteración del entrenamiento},
+aunque formen parte del conjunto de datos.
+
+Obteniendo el error medio en validación usando este tipo de validación cruzada, podemos hacernos una idea de cómo de bueno (en media) será nuestro modelo fuera de la muestra. De hecho, sabemos que:
+
+\textbf{Teorema.-} El error de validación cruzada $E_{cv}$ es un estimador insesgado de la esperanza del error fuera de la muestra en conjuntos de datos de tamaño $N-1$.
+
+Usualmente, $K-$Fold cross validation se utilza para estimar los parámetros con los que se entrenará nuestro modelo final, y una vez que se han estimado, se vuelve a entrenar el modelo usando
+todos los datos de entrenamiento disponible para tener un modelo entrenado con un conjunto de datos lo mayor posible.
+
+\section{preprocesado de datos}
+
+Entramos en una de las fases más importantes de nuestro problema. Recordamos que tenemos 81 varibles para cada dato, y que como hemos visto, no están en la misma escala. Por ello, las normalizamos por columnas.
 
 \newpage
 \printbibliography
