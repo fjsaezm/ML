@@ -40,37 +40,40 @@ if SAVE:
 plt.show()
 wait()
 
+# Average std on datas features
+avg_std = np.mean([X_train[i].std() for i in range(0,X_train.shape[0]) ])
+print("Average Standard deviation of the features of the dataset per row: {}".format(avg_std))
+
+# Data preprocessing
+
+
+
 # Correlation Matrix
-df = pd.DataFrame(X_train,columns = np.arange(X_train.shape[1]))
-cov_matrix = df.cov()
+def corr_matrix(data,name_fig):
+    df = pd.DataFrame(data,columns = np.arange(data.shape[1]))
+    corr_matrix = df.corr()
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-cax = ax.matshow(cov_matrix,cmap = 'coolwarm',vmin = 0,vmax = 1)
-fig.colorbar(cax)
-ticks = np.arange(0,X_train.shape[1],1)
-ax.set_xticks(ticks)
-plt.xticks(rotation=90)
-ax.set_yticks(ticks)
-plt.show()
-wait()
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cax = ax.matshow(corr_matrix,cmap = 'coolwarm',vmin = 0,vmax = 1)
+    fig.colorbar(cax)
+    ticks = np.arange(0,data.shape[1],1)
+    ax.set_xticks(ticks)
+    plt.xticks(rotation=90)
+    ax.set_yticks(ticks)
 
-if SAVE:
-    plt.savefig("media/cov_matrix.pdf")
-    
-zero = df.iloc[[0]].to_numpy()[0]
-print("Standard deviation of the first element of the dataset {}".format(zero.std()))
-
+    if SAVE:
+        plt.savefig("media/" + name_fig + ".pdf")
+    plt.show()
+    wait()
 
 print("Preprocessing...")
 
 def preprocess_data(X,y):
     Xc, yc = X.copy(),y.copy()
-    scaler = StandardScaler()
-    # Standardization
-    for j in range(0,X.shape[1]):
-        Xc[:j] = scaler.fit_transform(Xc[:j])
-        
-        
+    Xc = StandardScaler().fit_transform(Xc.T).T
     return Xc,yc
 
+Xp,yp = preprocess_data(X_train,y_train)
+corr_matrix(X_train,"corr-no-normalized")
+corr_matrix(Xp,"corr-normalized")

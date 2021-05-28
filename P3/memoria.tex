@@ -255,19 +255,21 @@ Dibujamos ahora un gráfico en el que mostramos el diagrama de caja de los posib
   \caption{Diagrama de caja de las temperaturas $T_c$ en el conjunto de entrenamiento.}
 \end{figure}
 
-Como podemos ver, aunque tenemos variabilidad en los valores de $f$, tenemos la mayoría de estos concentrados en el intervalo $[0,50]$, lo cual nos indica que hay probabilidad de que los datos no sean separables o tengamos ruido en nuestra muestra. Como podemos ver, tenemos un dato que se aleja mucho de $1.5$ por el rango intercuartílico, que es lo que representan los \emph{bigotes} del diagrama de caja. Es por ello que podemos decir que este punto es posiblemente un \emph{outlier}.
+Podemos ver que tenemos una variabilidad razonablemente amplia en los valores que toma $f$. Sin embargo, se observa que la mayoría de los valores de $f$ están concentrados en el intervalo $[0,50]$, pero también tenemos valores que se alejan bastante de este intervalo. Esto nos podría indicar que nuestra muestra está sesgada, en el sentido de que no tenemos muchos puntos $x_i$ en nuestro dataset que nos den valores altos de la temperatura $T_c$.  Como podemos ver, tenemos un dato que se aleja mucho de $1.5$ por el rango intercuartílico, que es lo que representan los \emph{bigotes} del diagrama de caja. Es por ello que podemos decir que este punto es posiblemente un \emph{outlier}.
 
-En cuanto a los valores de nuestros datos, si tomamos el primer elemento y calculamos la desviación típica $\sigma$ y el resultado que obtenemos es:
+En cuanto a los valores de nuestros datos, si tomamos una media de las desviaciones típicas $\sigma$ de los atributos de cada elemento de nuestro conjunto de datos, el resultado es:
 \begin{lstlisting}[language = Python]
-  Standard deviation of the first element of the dataset 2747.992
-\end{lstlisting}Por lo que obtenemos que claramente los valores de los diferentes atributos no están en el mismo rango de escala. Es por ello que previamente al entrenamiento realizaremos una estandarización por atributos de nuestro conjunto de datos.
+  Average Standard deviation of the features of the dataset per row: 1613.81306
+\end{lstlisting}
+Por lo que obtenemos que claramente los valores de los diferentes atributos no están en el mismo rango de escala. Es por ello que previamente al entrenamiento realizaremos una estandarización por atributos de nuestro conjunto de datos.
 
 \subsection{La clase de funciones $\mathcal H$}
 
 La clase de funciones a utilizar en este caso viene impuesta por el enunciado del ejercicio. En este caso, utilizaremos la clase de las funciones lineales:
 $$
-\mathcal H = \{ h(x) = w^t x \ : \ w \in R^{n+1}\}.
+\mathcal H = \{ h(x) = w^T x \ : \ w \in R^{n+1}\}.
 $$
+
 Tenemos que destacar que, aunque se podría plantear aplicar funciones no lineales a las características dadas (ejemplo $\phi :\R^d \to \R^{k}$ dada por $\phi(x) = (1,x_1,\cdots,x_n,x_1x_1,x_1x_2,\cdots,x_dx_d)$, no se hace en este caso pues estaríamos añadiendo ua complejidad a la clase de funciones sin saber realmente si esto sería útil de cara a la generalización o no. Es por ello que, al no tener en la información sobre los datos que se nos proporciona ningún motivo para hacerlo, se decide no aplicar ninguna transformación de este estilo a los datos.
 
 \subsection{Conjuntos de entrenamiento, validación y test}
@@ -278,19 +280,18 @@ Para elegir en nuestro conjunto de hipótesis antes de evaluar la función elegi
 
 Esta técnica consiste en, si llamamos $X_{train}$ al conjunto de entrenamiento, realizar los siguientes pasos:
 \begin{algorithm}[H]
-  \SetAlgoLined
   \caption{K-Fold Cross Validation}
   \begin{algorithmic}[1]
-  \State $Vector_Eouts = []$
-  \For{i \in 1,...,k}
+  \State $Vector\_Eouts = []$
+  \For{i = 1,...,k}
     \State $ Datos_{val} \gets Particion_i$
-    \State $ Datos_{train} \gets X_train \backslash Particion _i$
+    \State $ Datos_{train} \gets X_{train} \backslash Particion _i$
     \State $ Pesos \gets $ Entrenamiento en $Datos_{train}$
     \State $ Vector_Eouts \gets Error(Pesos, Datos_{val})$
 
   \EndFor
 
-  \State \textbf{return} Average $Vector_Eouts$
+  \State \textbf{return} Average $Vector\_Eouts$
   
   \end{algorithmic}
 \end{algorithm}
@@ -304,10 +305,10 @@ Obteniendo el error medio en validación usando este tipo de validación cruzada
 
 \textbf{Teorema.-} El error de validación cruzada $E_{cv}$ es un estimador insesgado de la esperanza del error fuera de la muestra en conjuntos de datos de tamaño $N-1$.
 
-Usualmente, $K-$Fold cross validation se utilza para estimar los parámetros con los que se entrenará nuestro modelo final, y una vez que se han estimado, se vuelve a entrenar el modelo usando
+Usualmente, $K-$Fold cross validation se utiliza para estimar los parámetros con los que se entrenará nuestro modelo final, y una vez que se han estimado, se vuelve a entrenar el modelo usando
 todos los datos de entrenamiento disponible para tener un modelo entrenado con un conjunto de datos lo mayor posible.
 
-\section{preprocesado de datos}
+\section{Preprocesado de datos}
 
 Entramos en una de las fases más importantes de nuestro problema. Recordamos que tenemos 81 varibles para cada dato, y que como hemos visto, no están en la misma escala. Por ello, las normalizamos por columnas.
 
