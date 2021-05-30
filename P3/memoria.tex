@@ -215,6 +215,8 @@ Lo primero que debemos hacer es realizar una buena comprensión de la informaci�
 
 Nuestro primer conjunto de datos, \cite{superdata}, contiene características de ciertos elementos superconductores. Junto con estas características, se nos presenta una \emph{temperatura crítica}, que en \cite{hamidieh} lo denominan $T_c$ siendo un problema similar al que vamos a abordar, obtenida para un superconductor que posea estas características. También se nos presenta un archivo en el que se nos dan las fórmulas químicas de los superconductores, pero este archivo no será relevante para nosotros.
 
+Las características que obtenemos para este problema han sido generadas utilizando diferentes técnicas aplicadas a cada dato que se tenía inicialmente. Algunos de estos datos son su masa atómica, la energía requerida para ionizar el átomo, la densidad, la afinidad a nuevos electrones, temperatura de fusión, conductividad termal y la valencia del compuesto. Usando estos datos, se realizan una serie de transformaciones sobre estos valores para obtener el conjunto de datos final, limpiándolos durante el proceso de preparación, lo cual nos da unos datos con pocos errores o datos inútiles (se eliminan repetidos o aquellos que tengan $T_c = 0$).
+
 Lo primero que nos encontramos acerca de nuestros datos es la siguiente tabla:
 \begin{table}[h]
   \centering
@@ -257,13 +259,8 @@ Dibujamos ahora un gráfico en el que mostramos el diagrama de caja de los posib
 
 Podemos ver que tenemos una variabilidad razonablemente amplia en los valores que toma $f$. Sin embargo, se observa que la mayoría de los valores de $f$ están concentrados en el intervalo $[0,50]$, pero también tenemos valores que se alejan bastante de este intervalo. Esto nos podría indicar que nuestra muestra está sesgada, en el sentido de que no tenemos muchos puntos $x_i$ en nuestro dataset que nos den valores altos de la temperatura $T_c$.  Como podemos ver, tenemos un dato que se aleja mucho de $1.5$ por el rango intercuartílico, que es lo que representan los \emph{bigotes} del diagrama de caja. Es por ello que podemos decir que este punto es posiblemente un \emph{outlier}.
 
-En cuanto a los valores de nuestros datos, si tomamos una media de las desviaciones típicas $\sigma$ de los atributos de cada elemento de nuestro conjunto de datos, el resultado es:
-\begin{lstlisting}[language = Python]
-  Average Standard deviation of the features of the dataset per row: 1613.81306
-\end{lstlisting}
-Por lo que obtenemos que claramente los valores de los diferentes atributos no están en el mismo rango de escala. Es por ello que previamente al entrenamiento realizaremos una estandarización por atributos de nuestro conjunto de datos.
 
-\subsection{La clase de funciones $\mathcal H$}
+\subsection{La clase de funciones $\mathcal H$. Las hipótesis finales.}
 
 La clase de funciones a utilizar en este caso viene impuesta por el enunciado del ejercicio. En este caso, utilizaremos la clase de las funciones lineales:
 $$
@@ -272,7 +269,11 @@ $$
 
 Tenemos que destacar que, aunque se podría plantear aplicar funciones no lineales a las características dadas (ejemplo $\phi :\R^d \to \R^{k}$ dada por $\phi(x) = (1,x_1,\cdots,x_n,x_1x_1,x_1x_2,\cdots,x_dx_d)$, no se hace en este caso pues estaríamos añadiendo ua complejidad a la clase de funciones sin saber realmente si esto sería útil de cara a la generalización o no. Es por ello que, al no tener en la información sobre los datos que se nos proporciona ningún motivo para hacerlo, se decide no aplicar ninguna transformación de este estilo a los datos.
 
-\subsection{Conjuntos de entrenamiento, validación y test}
+Una vez fijada la clase de funciones, el modelo que usaremos para este problema es regresión lineal. No tiene sentido utilizar otros métodos como perceptron pues se usan en problemas de clasificación. 
+
+Además, hay que comentar que para realizar esta regresión se utilizará el algoritmo de gradiente descendente estocástico (SGD), pues es bastante eficiente, unido a que podemos encontrar la implementación de esta regresión usando SGD en sklearn.
+
+\subsection{Conjuntos de entrenamiento, validación y test.}
 
 En este problema, tenemos un conjunto suficientemente grande de datos, que no viene previamente separado en subconjuntos de entrenamiento y test. En concreto, hemos mencionado ya que $N = 21263$ datos. Es por ello que se ha decidido usar un conjunto de entrenamiento con el $70\%$ de los datos, y dejar el $30\%$ para el conjunto de test. Para ello nos aprovechamos de la función \lstinline{train\_test\_split} de \lstinline{sklearn}.
 
@@ -297,7 +298,7 @@ Esta técnica consiste en, si llamamos $X_{train}$ al conjunto de entrenamiento,
 \end{algorithm}
 
 Describiéndolo en pocas palabras, diríamos que partimos el conjunto de entrenamiento en $k$ subconjuntos y en cada iteración entrenamos nuestro modelo
-con $k-1$ particiones y calculamos el error ``fuera de la muestra'' usando la partición restante. Hacemos eso con todas las particiones y devolvemos una media de
+con $k-1$ particiones y calculamos el error ``fuera de la muestra'' (lo llamamos así porque lo calculamos sobre el conjunto de datos de entrenamiento que \textbf{no} hemos usado para entrenar) usando la partición restante. Hacemos eso con todas las particiones y devolvemos una media de
 los errores fuera de la muestra que hemos obtenido. Les decimos errores fuera de la muestra porque se calculan usando puntos no usados \textbf{en esa iteración del entrenamiento},
 aunque formen parte del conjunto de datos.
 
@@ -308,10 +309,97 @@ Obteniendo el error medio en validación usando este tipo de validación cruzada
 Usualmente, $K-$Fold cross validation se utiliza para estimar los parámetros con los que se entrenará nuestro modelo final, y una vez que se han estimado, se vuelve a entrenar el modelo usando
 todos los datos de entrenamiento disponible para tener un modelo entrenado con un conjunto de datos lo mayor posible.
 
-\section{Preprocesado de datos}
 
-Entramos en una de las fases más importantes de nuestro problema. Recordamos que tenemos 81 varibles para cada dato, y que como hemos visto, no están en la misma escala. Por ello, las normalizamos por columnas.
+En nuestro caso, usaremos \lstinline{StratifiedKFold} de \emph{sklearn}. Esta función nos devuelve el número de folds $k$ que le indiquemos, con la salvedad de que se intenta mantener la distribución de datos existente en el conjunto en cada uno de los subconjuntos. En el caso de regresión, en cada partición obtenida tendremos valores de $f$ distribuidos como los tenemos en el conjunto de entrenamiento completo.
 
+\subsection{Preprocesado de datos.}
+
+Entramos en una de las fases más importantes de nuestro problema. Vamos a ver qué transformaciones haremos sobre nuestros datos antes de realizar la regresión.
+
+
+En cuanto a los valores de nuestros datos, si tomamos una media de las desviaciones típicas $\sigma$ de los atributos de cada elemento de nuestro conjunto de datos, el resultado es:
+\begin{lstlisting}[language = Python]
+  Average Standard deviation of the features of the dataset per row: 1613.81306
+\end{lstlisting}
+Por lo que obtenemos que claramente los valores de los diferentes atributos no están en el mismo rango de escala. Es por ello que previamente al entrenamiento realizaremos una estandarización por atributos de nuestro conjunto de datos. Esto nos permitirá que sean comparables entre ellos.
+
+Recordamos que tenemos 81 variables para cada dato. Nos interesa saber si todas estas variables son completamente útiles para el entrenamiento o nos interesa hacer una reducción de dimensionalidad en nuestro problema. Vamos a hacer una visualización las correlaciones entre las características para ver si algunas de ellas están altamente correladas.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.55\linewidth]{media/corr-normalized.pdf}
+  \caption{Matriz de correlaciones en el conjunto de entrenamiento estandardizado. }
+  \label{fig:myfig:2}
+\end{figure}
+
+Como se puede observar a simple vista puede parecer que haya variables cuya correlación sea prácticamente igual a $1$, por lo que podrían ser suprimibles para el proceso de entrenamiento. En concreto, si nos quedamos con el triángulo superior y buscamos los valores mayores a $0.95$, obtenemos:
+\begin{lstlisting}[language = Python]
+  There are 23 variables which correlation with another is greater than 0.95
+\end{lstlisting}
+Por lo que hay 23 variables que podrían ser potencialmente eliminadas. 
+
+La decisión sobre qué características son más relevantes para el entrenamiento, una vez mostrado empíricamente que hay variables altamente correladas, la vamos a hacer utilizando el \textbf{Análisis de componentes principales} (PCA).  Las \emph{componentes principales} de un conjunto de datos son una secuencia de vectores unitarios ortogonales entre sí y que marcan las direcciones que ajustan mejor a nuestro conjunto de datos, minimizando la distancia cuadrática media desde los puntos a la recta generada por cada vector. PCA es el proceso de encontrar estas componentes principales.
+
+Una vez se han hallado, se reduce la dimensionalidad de nuestro conjunto de datos proyectando cada punto de datos a sus direcciones principales para obtener datos de menor dimensión, pero preservando la variabilidad de los datos lo máximo posible.
+
+Se puede probar de hecho que las componentes principales son los vectores propios de la matriz de covarianzas de nuestro conjunto de datos, por lo que para hallarlas se debe hacer la descomposición de la matriz en valores singulares.
+
+Tras aplicar el análisis de componentes principales, conseguimos que en nuestro conjunto de datos no haya correlaciones entre las variables. Esto nos ayuda además a reducir el \emph{overfitting} al tener menos variables dependientes. En nuestro caso, tras aplicar PCA haciendo que el algoritmo explique el $95\%$ de la varianza de nuestro conjunto de datos, obtenemos que nos quedamos con $17$ de las variables iniciales. Además, como podemos ver en la Figura \ref{fig:corr-pca}, las variables están completamente incorreladas.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.55\linewidth]{media/corr-pca.pdf}
+  \caption{Matriz de correlaciones tras aplicar PCA. }
+  \label{fig:corr-pca}
+\end{figure}
+
+
+
+
+\subsection{Métrica de error.}
+
+En este problema, la métrica de error que utilizaremos es la estándar utilizada en problemas de regresión, el error cuadrático medio (MSE), que sabemos que viene dado por:
+\[
+MSE(h) = \frac{1}{N} \sum_{n = 1}^N (h(x_n) - y_n)^2.
+\]
+Donde sabemos que $N$ es el tamaño de la muestra usada e $y_j$ es el valor que toma la función $f$ en el punto $x_j$ para cada $j = 1,\dots ,N$. 
+
+Esta métrica de error penaliza mucho los \emph{outliers} pues la distancia entre un punto lejano y el valor que predigamos mediante la regresión será grande, y error se incrementará en gran medida. Este puede ser un motivo que nos anime a tratar de eliminar un porcentaje de datos que consideremos como \emph{outliers}. Hay que recordar además que no está acotada superiormente, por lo que podemos obtener valores muy grandes de error.
+
+Sin embargo, esta métrica es idónea pues para que la regresión sea buena, lo que se pretenderá es que dentro de este conjunto de datos las distancias entre el valor predicho por nuestra regresión y el valor que tenemos como dato, $y_i$, sean lo más parecido posibles, por lo que es sin duda la mejor métrica de error a usar.
+
+
+\subsection{Regularización y parámetros del modelo.}
+
+A la hora de entrenar, se demuestra tanto empírica como teóricamente que aplicar \textbf{regularización} mejora sustancialmente el resultado de los modelos. En la teoría, la regularización nos limita la clase de funciones a utilizar, reduciendo así la dimensión VC de la misma, y por tanto mejorando la cota del error fuera de la muestra que podemos dar. Además, en la práctica, la regularización previene a nuestro modelo de \emph{sobreajustar} la muestra.
+
+Existen muchos tipos de regularización que se pueden aplicar a la hora de entrenar. Comentaremos dos de las más frecuentes y utilizadas habitualmente. 
+
+\begin{itemize}
+   
+
+    \item La regularización \textbf{Lasso} o \textbf{L1}, que también añade un érmino de penalización a la función de pérdida, pero que en este caso suma el valor absoluto de los pesos:
+    $$
+    L_{reg}(w) = MSE(w) + \lambda \sum_{i = 0}^N \abs{w_i}.
+    $$
+
+    \item La regularización \textbf{Ridge} o \textbf{L2} suma una término cuadrático a modo de penalización a la función de pérdida. Este término es equivalente al cuadrado de la norma de los pesos.  La nueva función de pérdida queda como:
+    $$
+    L_{reg}(w) = MSE(w) + \lambda \norm{w}_2^.
+    $$
+    Como hemos visto en teoría, esto es idéntico a minimizar el error cuadrático medio sujeto a que $\sum_{j = 0}^p w_j^2 < c$ para cierto $c\in \R$. Así, estamos haciendo que los coeficientes sean más pequeños y reduciendo la complejidad del modelo.
+\end{itemize}
+
+En ambos casos, estamos añadiendo a la pérdida una penalización multiplicada por un parámetro $\lambda$. Si reducimos la constante de penalización $\lambda$, el término que nos queda es igual que el error cuadrático medio, por lo que lo interesante sera ajustar bien este parámetro para que la regularización afecte de manera positiva al entrenamiento.
+
+La diferencia entre ambas es que en la regularización $L_1$ ayuda a seleccionar variables eliminando aquellas que tienen menos relevancia. La $L_2$ funciona mejor cuando se piensa que todas las variables son relevantes para la predicción. Además, el término que ésta introduce es diferenciable lo cual tiene ventajas computacionales. 
+
+En este caso ya habíamos tratado de seleccionar las características que mejor explicasen la varianza del conjunto mediante PCA. Es por todo ello que elegimos usar la regularización $L_2$ en este problema. 
+% https://medium.com/analytics-vidhya/l1-vs-l2-regularization-which-is-better-d01068e6658c
+
+
+
+\subsection{Selección de hipótesis.}
 \newpage
 \printbibliography
 
