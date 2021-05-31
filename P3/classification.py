@@ -105,7 +105,7 @@ X_train,X_test,y_train,y_test = np.array(X_train),np.array(X_test),np.array(y_tr
 print(X_train.shape)
 pca = PCA(n_components = 30 )
 X_pca = pca.fit_transform(X_train)
-tsne = TSNE(n_components = 2, verbose = 1, perplexity = 500, n_iter = 1000, learning_rate  = 200)
+tsne = TSNE()
 scatter_plot(tsne.fit_transform(X_pca),y_train,axis = ["x", "y"],title = "Proyección 2-dimensional con TSNE",figname = "tsne")
 #print(X_train)
 #print(y_train)

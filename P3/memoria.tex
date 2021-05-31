@@ -235,8 +235,9 @@ Esta información nos resulta muy útil, pues obtenemos podemos observar que ten
 Con la información proporcionada podemos decir que:
 
 \begin{enumerate}
-\item Nuestro conjunto de datos de entrenamiento será
-  $$\mathcal X = \{ x_i \in \R^{81}, \text{ con } i = 1, \dots , 21263 \}.$$
+\item Nuestro conjunto de datos de entrada será
+  $$\mathcal X = \{ x_i \in \R^{81}, \text{ con } i = 1, \dots , 21263 \},$$
+  que luego dividiremos en subconjuntos de entrenamiento y test.
 
 \item Nuestro conjunto de etiquetas, puesto que no se nos indica ninguna restricción sobre las temperaturas, podemos asumir que es:
   $$
@@ -356,6 +357,8 @@ Tras aplicar el análisis de componentes principales, conseguimos que en nuestro
 \end{figure}
 
 
+% Explicar que no se detectan outliers usando 
+
 
 
 \subsection{Métrica de error.}
@@ -430,8 +433,69 @@ De nuevo, comenzamos observando la información que se nos proporciona del conju
 
 Una vez medidas las características, se han generado más datos usando la descomposición EMD \cite{noauthor_hilberthuang_2021}, y se han calculado datos estadísticos como la media, desviación típica o la curtosis de las variables.
 
+Una vez medidas las características, se determina una clase de motor a las que estas características pertenecen. Se ha dividido el conjunto en $11$ clases diferentes, que nosotros trataremos de separar utilizando modelos lineales. Veamos de nuevo una tabla con más información sobre los datos:
 
 
+\begin{table}[h]
+  \centering
+  \begin{tabular}{|l|l|l|l|}
+    \hline
+    Características         & Multivariable & Número de instancias & $58509$ \\ \hline
+    Tipo de características & Reales        & Número de atributos  & $49$    \\ \hline
+    Tareas asociadas        & Clasificación     & Valores perdidos     & $N\backslash A$   \\ \hline
+  \end{tabular}
+  \caption{Datos contenidos en el conjunto de datos Sensorless Drive Diagnosis.}
+\end{table}
+
+Podemos comprobar que tenemos un número de instancias aún mayor que en el caso anterior y son de nuevo variables reales. Además, tampoco tenemos valores perdidos por lo que no tendremos que preocuparnos de tratar ese caso. 
+
+Con esta información, podemos concluir que:
+
+\begin{enumerate}
+\item El conjunto de datos de entrenamiento serán vectores de $\R^{49}$ de características de un motor, por lo que podemos definirlo formalmente como:
+$$
+\mathcal X = \{ x_i \in \R^{49}, \text{ con } i= 1, \dots, 58509\},
+$$
+que dividiremos también en conjunto de entrenamiento y test.
+
+\item Sabemos que los datos se han dividido en 11 clases. Además, estas clases se representan por un número del 1 al 11. Por tanto, el conjunto de llegada es:
+$$
+\mathcal Y = \left\{ y_i \in \{1,2,\dots,11\} \text{ con } i = 1,\dots, 58509\}\right\}
+$$
+\item El último elemento de nuestro problema es la función $f: \mathcal X \to \mathcal Y$, que nos dará para un vector de características de un motor una etiqueta según la clase a la que pertenezca.
+\end{enumerate}
+
+
+Tras separar el conjunto de test para evitar el data snooping, se ha tratado de representar gráficamente el conjunto de train con sus clases utilizando la conocida técnica \lstinline{t-SNE} (t-Distributed Stochastic Neighbor Encoding). Esta técnica requiere una serie de parámetros que dependen de la distribución de los datos y nos ayuda transformar el conjunto multidimensional en un conjunto con las componentes que nos interesen, que para visualización suelen ser $2$ ó $3$. 
+
+%https://www.jmlr.org/papers/volume9/vandermaaten08a/vandermaaten08a.pdf
+
+Sin embargo, es bien sabido que obtener los parámetros adecuados para que produzca los resultados deseados no es tarea sencilla. De hecho, en 
+
+% https://distill.pub/2016/misread-tsne/
+
+se muestra cómo dentro de una misma muestra, según los hiperparámetros que se usen en \lstinline{t-SNE}, se pueden dar diferentes proyecciones al plano euclídeo. 
+
+Aún así, se ha intentado sin éxito probar diferentes combinaciones de parámetros (perplejidad, número de iteraciones,tasa de aprendizaje) para tratar de obtener algo de información sobre los datos, y el resultado es el siguiente:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.55\linewidth]{media/tsne.pdf}
+  \caption{Proyección al plano euclídeo y ajuste de \emph{t-SNE} con parámetros por defecto. }
+  \label{fig:tsne}
+\end{figure}
+
+Se han usado los parámetros por defecto para el gráfico pues el resultado es muy similar al que ocurre si se utilizan parámetros más sofisticados.
+
+
+
+\subsection{La clase de funciones $\mathcal H$. Las hipótesis finales.}
+
+En este caso, volvemos a tener la misma clase de funciones inicial que en el ejercicio anterior, ya que viene impuesto así. Usamos la clase de funciones lineales:
+
+$$
+\mathcal H = \{ h(x) = w^T x \ : \ w \in \R^{n+1}\}
+$$
 
 \newpage
 \printbibliography

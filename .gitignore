@@ -6,3 +6,10 @@ texput
 P2/datos/
 *.rar
 P2/media/*
+*.blg
+*.out
+*.xml
+*.toc
+*.bcf
+*.bbl
+*.pdf
