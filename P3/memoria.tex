@@ -259,12 +259,14 @@ Dibujamos ahora un gráfico en el que mostramos el diagrama de caja de los posib
 
 Podemos ver que tenemos una variabilidad razonablemente amplia en los valores que toma $f$. Sin embargo, se observa que la mayoría de los valores de $f$ están concentrados en el intervalo $[0,50]$, pero también tenemos valores que se alejan bastante de este intervalo. Esto nos podría indicar que nuestra muestra está sesgada, en el sentido de que no tenemos muchos puntos $x_i$ en nuestro dataset que nos den valores altos de la temperatura $T_c$.  Como podemos ver, tenemos un dato que se aleja mucho de $1.5$ por el rango intercuartílico, que es lo que representan los \emph{bigotes} del diagrama de caja. Es por ello que podemos decir que este punto es posiblemente un \emph{outlier}.
 
+Además, se ha tratado de encontrar si hay características que ofrezcan una desviación típica muy baja y que por ello pudieran no tener utilidad a la hora de entrenar nuestro modelo o hacer cálculos. Sin embargo, hemos encontrado que no hay ninguna característica con una desviación típica menor de $0.05$, por lo que no eliminamos por este criterio ninguna columna de nuestros datos.
+
 
 \subsection{La clase de funciones $\mathcal H$. Las hipótesis finales.}
 
 La clase de funciones a utilizar en este caso viene impuesta por el enunciado del ejercicio. En este caso, utilizaremos la clase de las funciones lineales:
 $$
-\mathcal H = \{ h(x) = w^T x \ : \ w \in R^{n+1}\}.
+\mathcal H = \{ h(x) = w^T x \ : \ w \in \R^{n+1}\}.
 $$
 
 Tenemos que destacar que, aunque se podría plantear aplicar funciones no lineales a las características dadas (ejemplo $\phi :\R^d \to \R^{k}$ dada por $\phi(x) = (1,x_1,\cdots,x_n,x_1x_1,x_1x_2,\cdots,x_dx_d)$, no se hace en este caso pues estaríamos añadiendo ua complejidad a la clase de funciones sin saber realmente si esto sería útil de cara a la generalización o no. Es por ello que, al no tener en la información sobre los datos que se nos proporciona ningún motivo para hacerlo, se decide no aplicar ninguna transformación de este estilo a los datos.
@@ -275,7 +277,7 @@ Además, hay que comentar que para realizar esta regresión se utilizará el alg
 
 \subsection{Conjuntos de entrenamiento, validación y test.}
 
-En este problema, tenemos un conjunto suficientemente grande de datos, que no viene previamente separado en subconjuntos de entrenamiento y test. En concreto, hemos mencionado ya que $N = 21263$ datos. Es por ello que se ha decidido usar un conjunto de entrenamiento con el $70\%$ de los datos, y dejar el $30\%$ para el conjunto de test. Para ello nos aprovechamos de la función \lstinline{train\_test\_split} de \lstinline{sklearn}.
+En este problema, tenemos un conjunto suficientemente grande de datos, que no viene previamente separado en subconjuntos de entrenamiento y test. En concreto, hemos mencionado ya que $N = 21263$ datos. Es por ello que se ha decidido usar un conjunto de entrenamiento con el $70\%$ de los datos, y dejar el $30\%$ para el conjunto de test. Para ello nos aprovechamos de la función \lstinline{train_test_split} de \lstinline{sklearn}.
 
 Para elegir en nuestro conjunto de hipótesis antes de evaluar la función elegida en el conjunto de test, utilizaremos la conocida técnica \textbf{K-Fold Cross Validation}.
 
@@ -385,7 +387,7 @@ Existen muchos tipos de regularización que se pueden aplicar a la hora de entre
 
     \item La regularización \textbf{Ridge} o \textbf{L2} suma una término cuadrático a modo de penalización a la función de pérdida. Este término es equivalente al cuadrado de la norma de los pesos.  La nueva función de pérdida queda como:
     $$
-    L_{reg}(w) = MSE(w) + \lambda \norm{w}_2^.
+    L_{reg}(w) = MSE(w) + \lambda \norm{w}_2^2 .
     $$
     Como hemos visto en teoría, esto es idéntico a minimizar el error cuadrático medio sujeto a que $\sum_{j = 0}^p w_j^2 < c$ para cierto $c\in \R$. Así, estamos haciendo que los coeficientes sean más pequeños y reduciendo la complejidad del modelo.
 \end{itemize}
@@ -398,8 +400,39 @@ En este caso ya habíamos tratado de seleccionar las características que mejor 
 % https://medium.com/analytics-vidhya/l1-vs-l2-regularization-which-is-better-d01068e6658c
 
 
+Quedaría por discutir los demás hiperparámetros con los que vamos a realizar nuestro entrenamiento. Estimar los mejores parámetros para un modelo es una tarea compleja. La mejor opción en la práctica es tomar para cada hiperparámetro un conjunto de valores que sepamos empíricamente que han dado buenos resultados en problemas similares y hacer una búsqueda haciendo combinaciones de esos valores de hiperparámetros para tratar de encontrar cuál es la combinación que mejor se ajusta a nuestro problema completo. Todo ello lo podemos realizar con la función de \lstinline{sklearn} :  \lstinline{GridSearchCV}.
+
+Esta función, recibe como parámetros:
+\begin{enumerate}
+\item \lstinline{estimator} el estimador que va a utilizar para aproximar lo que nos interese. Podemos usar SVMs, Regresores Lineales, Perceptron... En nuestro caso, usaremos
+  \begin{itemize}
+  \item \lstinline{SGDRegressor} que nos realiza la regresión usando el descenso de gradiente estocástico.
+  \item \lstinline{Ridge} que nos realiza la regresión usando la regularización $L2$.
+  \end{itemize}
+\item \lstinline{param_grid}, un diccionario que especifica para cada estimador que le demos el conjunto de hiperparámetros por los que tendrá que explorar. Explicaremos más adelante qué conjunto de parámetros a probar le pasaremos a la función.
+\item \lstinline{scoring}, un string que indica cuál es la estrategia para evaluar el resultado de la validación cruzada. En nuestro caso, debemos especificar \lstinline{"neg_mean_squared_error"}, pues queremos obtener el modelo que \textbf{menor} error cuadrático medio obtenga, y \lstinline{GridSearchCV} siempre intentar \textbf{maximizar} la estrategia proporcionada.
+\item \lstinline{n_jobs}, que indica cuántos procesos correr en paralelo. Elegimos la opción $-1$ para que se hagan todos los posibles y acelerar así el entrenamiento.
+
+  \item \lstinline{cv}, que determina el número de particiones que se hacen para la validación cruzada. En este caso, le indicamos que haga $5-$fold cross validation.
+
+\end{enumerate}
+
 
 \subsection{Selección de hipótesis.}
+
+\newpage
+
+\section{Clasificación}
+
+\subsection{Estudio del conjunto de datos. Identificación de $\mathcal X, \mathcal Y, f$}
+
+De nuevo, comenzamos observando la información que se nos proporciona del conjunto de datos. En este caso, nuestro nuevo conjunto de datos \cite{noauthor_uci_nodate} contiene características sobre impulsos eléctros que se han producido en motores. Estos motores tienen componentes intactos y componentes que están dañados. Las características se han medido en numerosas ocasiones mediante $12$ condiciones de trabajo diferentes, es decir: diferentes velocidades o cargas sobre el motor. Han sido medidas usandouna sonda de corriente y un osciloscopio.
+
+Una vez medidas las características, se han generado más datos usando la descomposición EMD \cite{noauthor_hilberthuang_2021}, y se han calculado datos estadísticos como la media, desviación típica o la curtosis de las variables.
+
+
+
+
 \newpage
 \printbibliography
 
