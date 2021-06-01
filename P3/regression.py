@@ -11,6 +11,7 @@ from sklearn.pipeline import Pipeline
 from timeit import default_timer
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.linear_model import SGDRegressor, LinearRegression, Ridge
+from sklearn.exceptions import ConvergenceWarning
 
 np.random.seed(1)
 
@@ -149,11 +150,11 @@ search_space = [
                           random_state = SEED)],
      'reg__alpha' : [1/10.0**i for i in range(1,5)],
      'reg__learning_rate':['constant','optimal','adaptive'],
-     'reg__max_iter':[2000,5000,10000],
+     'reg__max_iter':[5000,10000],
     },
     {'reg': [Ridge()],
      'reg__alpha': [1/10.0**i for i in range(1,5)],
-     'reg__max_iter': [2000,5000,10000]
+     'reg__max_iter': [5000,10000]
     
     }
 
@@ -162,8 +163,28 @@ search_space = [
 print("Realizando la búsqueda en el espacio dado de modelos lineales...", flush = True)
 start = default_timer()
 best_reg = GridSearchCV(model_pipe, search_space, scoring = "neg_mean_squared_error", cv = 5, n_jobs = -1)
+
 best_reg.fit(X_train_rem,y_train)
 end = default_timer() - start
+
+
+#df = pd.DataFrame({'param':best_reg.cv_results_["params"], 'MSE' : best_reg.cv_results_['mean_test_score']})
+
+
+
+df = pd.concat([pd.DataFrame(best_reg.cv_results_["params"]),pd.DataFrame(-best_reg.cv_results_["mean_test_score"])],axis = 1)
+
+print(df)
+#df = pd.DataFrame({'MSE': -best_reg.cv_results_['mean_test_score'],
+#                   'Regressor': best_reg.cv_results_["params"][:]['reg'],
+#                   'alpha': best_reg.cv_results_["params"][:]['reg__alpha'],
+#                   'maxIter': best_reg.cv_results_["params"][:]['reg__max_iter'],
+#                   'learningRate': best_reg.cv_results_["params"][:]['reg__learning_rate']})
+
+
+
+
+exit()
 
 print("Terminado en {}.".format(end))
 

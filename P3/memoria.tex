@@ -263,7 +263,7 @@ Podemos ver que tenemos una variabilidad razonablemente amplia en los valores qu
 Además, se ha tratado de encontrar si hay características que ofrezcan una desviación típica muy baja y que por ello pudieran no tener utilidad a la hora de entrenar nuestro modelo o hacer cálculos. Sin embargo, hemos encontrado que no hay ninguna característica con una desviación típica menor de $0.05$, por lo que no eliminamos por este criterio ninguna columna de nuestros datos.
 
 
-\subsection{La clase de funciones $\mathcal H$. Las hipótesis finales.}
+\subsection{La clase de funciones $\mathcal H$. }
 
 La clase de funciones a utilizar en este caso viene impuesta por el enunciado del ejercicio. En este caso, utilizaremos la clase de las funciones lineales:
 $$
@@ -291,7 +291,7 @@ Esta técnica consiste en, si llamamos $X_{train}$ al conjunto de entrenamiento,
     \State $ Datos_{val} \gets Particion_i$
     \State $ Datos_{train} \gets X_{train} \backslash Particion _i$
     \State $ Pesos \gets $ Entrenamiento en $Datos_{train}$
-    \State $ Vector_Eouts \gets Error(Pesos, Datos_{val})$
+    \State $ Vector\_Eouts \gets Error(Pesos, Datos_{val})$
 
   \EndFor
 
@@ -302,8 +302,7 @@ Esta técnica consiste en, si llamamos $X_{train}$ al conjunto de entrenamiento,
 
 Describiéndolo en pocas palabras, diríamos que partimos el conjunto de entrenamiento en $k$ subconjuntos y en cada iteración entrenamos nuestro modelo
 con $k-1$ particiones y calculamos el error ``fuera de la muestra'' (lo llamamos así porque lo calculamos sobre el conjunto de datos de entrenamiento que \textbf{no} hemos usado para entrenar) usando la partición restante. Hacemos eso con todas las particiones y devolvemos una media de
-los errores fuera de la muestra que hemos obtenido. Les decimos errores fuera de la muestra porque se calculan usando puntos no usados \textbf{en esa iteración del entrenamiento},
-aunque formen parte del conjunto de datos.
+los errores fuera de la muestra que hemos obtenido.
 
 Obteniendo el error medio en validación usando este tipo de validación cruzada, podemos hacernos una idea de cómo de bueno (en media) será nuestro modelo fuera de la muestra. De hecho, sabemos que:
 
@@ -313,7 +312,7 @@ Usualmente, $K-$Fold cross validation se utiliza para estimar los parámetros co
 todos los datos de entrenamiento disponible para tener un modelo entrenado con un conjunto de datos lo mayor posible.
 
 
-En nuestro caso, usaremos \lstinline{StratifiedKFold} de \emph{sklearn}. Esta función nos devuelve el número de folds $k$ que le indiquemos, con la salvedad de que se intenta mantener la distribución de datos existente en el conjunto en cada uno de los subconjuntos. En el caso de regresión, en cada partición obtenida tendremos valores de $f$ distribuidos como los tenemos en el conjunto de entrenamiento completo.
+En nuestro caso, se usarán particiones \textbf{estratificadas} de los datos. Esto quiere decir que , dado un número de particiones (\emph{folds}) $k$, se divide el conjunto de entrenamiento en esas $k$ particiones con la salvedad de que se intenta mantener la distribución de datos existente en el conjunto en cada uno de los subconjuntos. En el caso de regresión, en cada partición obtenida tendremos valores de $f$ distribuidos como los tenemos en el conjunto de entrenamiento completo.
 
 \subsection{Preprocesado de datos.}
 
@@ -335,7 +334,7 @@ Recordamos que tenemos 81 variables para cada dato. Nos interesa saber si todas 
   \label{fig:myfig:2}
 \end{figure}
 
-Como se puede observar a simple vista puede parecer que haya variables cuya correlación sea prácticamente igual a $1$, por lo que podrían ser suprimibles para el proceso de entrenamiento. En concreto, si nos quedamos con el triángulo superior y buscamos los valores mayores a $0.95$, obtenemos:
+Como se puede observar a simple vista puede parecer que haya variables cuya correlación sea prácticamente igual a $1$, por lo que \textbf{puede darse el caso} de que sean suprimibles en el proceso de entrenamiento. En concreto, si nos quedamos con el triángulo superior y buscamos los valores mayores a $0.95$, obtenemos:
 \begin{lstlisting}[language = Python]
   There are 23 variables which correlation with another is greater than 0.95
 \end{lstlisting}
@@ -357,7 +356,9 @@ Tras aplicar el análisis de componentes principales, conseguimos que en nuestro
 \end{figure}
 
 
-% Explicar que no se detectan outliers usando 
+Sin embargo, quedarnos con tan pocas variables no nos asegura que el modelo entrenado con estas variables vaya ser mejor que el modelo entrenado con todas las variables.  Es por ello que cuando entrenemos, tomaremos para entrenar modelos con los datos reducidos en dimensionalidad y sin reducir.
+
+Además, hay que comentar que se ha tratado de detectar \textbf{outliers} en nuestro conjunto usando \lstinline{IsolationForest} de \lstinline{sklearn}, pero el número de outliers encontrado era despreciable así que no se han eliminado del conjunto de entrenamiento.
 
 
 
@@ -369,7 +370,7 @@ MSE(h) = \frac{1}{N} \sum_{n = 1}^N (h(x_n) - y_n)^2.
 \]
 Donde sabemos que $N$ es el tamaño de la muestra usada e $y_j$ es el valor que toma la función $f$ en el punto $x_j$ para cada $j = 1,\dots ,N$. 
 
-Esta métrica de error penaliza mucho los \emph{outliers} pues la distancia entre un punto lejano y el valor que predigamos mediante la regresión será grande, y error se incrementará en gran medida. Este puede ser un motivo que nos anime a tratar de eliminar un porcentaje de datos que consideremos como \emph{outliers}. Hay que recordar además que no está acotada superiormente, por lo que podemos obtener valores muy grandes de error.
+Esta métrica de error penaliza mucho los \emph{outliers} pues la distancia entre un punto lejano y el valor que predigamos mediante la regresión será grande, y error se incrementará en gran medida. En este caso sin embargo, no tenemos esos outliers. Hay que recordar además que no está acotada superiormente, por lo que podemos obtener valores muy grandes de error.
 
 Sin embargo, esta métrica es idónea pues para que la regresión sea buena, lo que se pretenderá es que dentro de este conjunto de datos las distancias entre el valor predicho por nuestra regresión y el valor que tenemos como dato, $y_i$, sean lo más parecido posibles, por lo que es sin duda la mejor métrica de error a usar.
 
@@ -416,12 +417,30 @@ Esta función, recibe como parámetros:
 \item \lstinline{scoring}, un string que indica cuál es la estrategia para evaluar el resultado de la validación cruzada. En nuestro caso, debemos especificar \lstinline{"neg_mean_squared_error"}, pues queremos obtener el modelo que \textbf{menor} error cuadrático medio obtenga, y \lstinline{GridSearchCV} siempre intentar \textbf{maximizar} la estrategia proporcionada.
 \item \lstinline{n_jobs}, que indica cuántos procesos correr en paralelo. Elegimos la opción $-1$ para que se hagan todos los posibles y acelerar así el entrenamiento.
 
-  \item \lstinline{cv}, que determina el número de particiones que se hacen para la validación cruzada. En este caso, le indicamos que haga $5-$fold cross validation.
+\item \lstinline{cv}, que determina el número de particiones que se hacen para la validación cruzada. En este caso, le indicamos que haga $5-$fold cross validation.
+
 
 \end{enumerate}
 
 
+
+Queda por concretar los valores concretos que se le dan a los parámetros que se le pasan en el diccionario \lstinline{param_grid}. En concreto, tenemos que comentar:
+
+\begin{itemize}
+\item El parámetro de regularización $\lambda$, que le hemos dado los valores $[0.1,0.01,0.001,0.0001,0.00001]$. Se han escogido estos valores pues se usan habitualmente en la literatura sobre los valores a escoger para el parámetro de regularización. Por ejemplo en \cite{2013applied}.
+
+\item El número de iteraciones \lstinline{max_iter}, que se le han dado los valores $[5000,10000]$. En algunos casos, usando las $5000$ iteraciones se nos indica mediante un \emph{warning} que no se llega a converger, pero no es un problema porque tenemos el mismo modelo pero con $10000$ iteraciones.
+
+  \item Para el parámetro \lstinline{learning_rate} usado en el regresor lineal con SGD, se utilizan también varias versiones de modificación del parámetro. En concreto, se usa \lstinline{constant}, para manterner el parámetro constante, \lstinline{adaptive} para que el parámetro aumente o disminuya según se vaya aumentando o disminuyendo el error obtenido, y \lstinline{optimal}, para tratar de obtener el óptimo descenso en cada iteración.
+
+\end{itemize}
+
+
 \subsection{Selección de hipótesis.}
+
+
+
+
 
 \newpage
 
@@ -487,6 +506,8 @@ Aún así, se ha intentado sin éxito probar diferentes combinaciones de paráme
 
 Se han usado los parámetros por defecto para el gráfico pues el resultado es muy similar al que ocurre si se utilizan parámetros más sofisticados.
 
+
+%% Comentar la distribución en clases de los datos
 
 
 \subsection{La clase de funciones $\mathcal H$. Las hipótesis finales.}
