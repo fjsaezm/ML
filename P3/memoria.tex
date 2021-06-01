@@ -438,6 +438,8 @@ Queda por concretar los valores concretos que se le dan a los parámetros que se
 
 \subsection{Selección de hipótesis.}
 
+\subsection{Error final fuera de la muestra.}
+
 
 
 
@@ -510,13 +512,61 @@ Se han usado los parámetros por defecto para el gráfico pues el resultado es m
 %% Comentar la distribución en clases de los datos
 
 
-\subsection{La clase de funciones $\mathcal H$. Las hipótesis finales.}
+\subsection{La clase de funciones $\mathcal H$.}
 
-En este caso, volvemos a tener la misma clase de funciones inicial que en el ejercicio anterior, ya que viene impuesto así. Usamos la clase de funciones lineales:
+
+Ahora, las funciones deben ser del mismo tipo en el sentido de que en esencia deben ser lineales, es decir,
+$$
+h(x) = w^T x, \quad w \in \R^n
+$$
+
+Recordamos que cuando tratábamos de clasificar elementos en anteriores prácticas, como solo teníamos dos clases, nombrábamos una como positiva y la otra sería la negativa y podíamos tomar simplemente el signo de $h(x)$ como la etiqueta predicha para un elemento del conjunto. 
+
+Ahora, estamos ante un problema de clasificación multietiqueta (en concreto, tenemos $11$) etiquetas, por lo que debemos emplear otra estrategia. En este caso , usaremos \emph{one-versus-all} (también conocida como \emph{one-versus-rest}). Debemos hacer un hiperplano $w_i$ para cada clase. 
+
+Recordamos siguiendo lo que hemos visto en 
+%% Referencia a learning from data
+que como $w$ es ortogonal a todo vector que esté en el hiperplano, entonces podemos considerar a $h(x)$ una distancia con signo del punto $x$ al hiperplano salvo el cociente por $\norm{w}$. En \emph{one versus all}, consideramos que si queremos ver si un elemento $x \in \mathcal X$ pertenece a la clase $i-$ésima, se toma esta clase como la clase positiva y todas las demás como negativas, quedándonos así con un problema de clasificación binaria. Hacemos esto para todas las clases y, como $h_i(x) = w_i^T x$ es una distancia, consideraremos que la clase del elemento $x$ es la que obtenga el valor más grande. En el caso de no haber ninguno, se toma el valor más cercano a la frontera de clasificación. Matemáticamente, podemos expresar esto como:
+$$
+g(x) = \arg \max_i h_i(x).
+$$
+
+Es por ello que la clase de funciones que obtenemos en nuestro problema es la siguiente
 
 $$
-\mathcal H = \{ h(x) = w^T x \ : \ w \in \R^{n+1}\}
+\mathcal H = \left\{ \ \arg \max_i w_i^T x  \ : \ w_i \in \R^n, i = 0,\dots,11\right\}.
 $$
+
+Igual que en el caso de regresión, no tenemos información suficiente para justificar la realización de transformaciones no lineales del espacio para obtener datos en el $\mathcal Z-$espacio que puedan darnos mejores resultados tanto dentro como fuera de la muestra, así que se decide no aplicar esas transformaciones.
+
+\subsection{Conjuntos de entrenamiento, validación y test.}
+
+En este caso, de nuevo tenemos todos los datos en un único fichero que tenemos que dividir nosotros. Optamos por volver a realizar una partición de $70\%$ para el conjunto de entrenamiento y $30\%$ para el conjunto de test.
+
+También volveremos a utilizar en el entrenamiento $K-$\emph{Fold cross validation}, aunque en este caso es más relevante el hecho de que esta división sea estratificada, para mantener la distribución por clases de nuestro conjunto en cada una de las particiones y tener representantes de todas las clases en todos los subconjuntos y que estos no queden sesgados de cara al entrenamiento.
+
+\subsection{Preprocesado de datos.}
+
+\subsection{Métricas de error.}
+
+En este caso debemos usar una métrica claramente diferente. Nos interesa un error que nos indique, dada una hipótesis $h$, cuántas veces de media obtenemos clasificaciones erróneas. Claramente, si $(x_n,y_n)$ representa un par: vector de atributos, etiqueta, entonces el error que queremos es:
+$$
+E(h) = \frac{1}{N} \sum_{i = 1}^N \llbracket h(x_n) \neq y_n \rrbracket.
+$$
+
+Como $\llbracket h(x_n) \neq y_n \rrbracket \in \{0,1\}$, tenemos que $E(h) \in [0,1]$ para toda hipótesis $h$. Esto se interpreta fácilmente porque podemos también considerar:
+$$
+Acc(h) = 1 - E(h),
+$$
+el acierto medio de la hipótesis.
+
+\subsection{Regularización y parámetros del modelo.}
+
+\subsection{Selección de hipótesis.}
+
+\subsection{Error final fuera de la muestra.}
+
+
 
 \newpage
 \printbibliography
