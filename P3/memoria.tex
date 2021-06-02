@@ -570,14 +570,14 @@ Una vez medidas las características, se determina una clase de motor a las que 
   \caption{Datos contenidos en el conjunto de datos Sensorless Drive Diagnosis.}
 \end{table}
 
-Podemos comprobar que tenemos un número de instancias aún mayor que en el caso anterior y son de nuevo variables reales. Además, tampoco tenemos valores perdidos por lo que no tendremos que preocuparnos de tratar ese caso. 
+Vemos sin embargo que dentro de los datos, el último valor no es una característica sino la clasificación del objeto, por lo que en realidad el número de atributos es $48$.Podemos comprobar que tenemos un número de instancias aún mayor que en el caso anterior y son de nuevo variables reales. Además, tampoco tenemos valores perdidos por lo que no tendremos que preocuparnos de tratar ese caso. 
 
 Con esta información, podemos concluir que:
 
 \begin{enumerate}
-\item El conjunto de datos de entrenamiento serán vectores de $\R^{49}$ de características de un motor, por lo que podemos definirlo formalmente como:
+\item El conjunto de datos de entrenamiento serán vectores de $\R^{48}$ de características de un motor, por lo que podemos definirlo formalmente como:
 $$
-\mathcal X = \{ x_i \in \R^{49}, \text{ con } i= 1, \dots, 58509\},
+\mathcal X = \{ x_i \in \R^{48}, \text{ con } i= 1, \dots, 58509\},
 $$
 que dividiremos también en conjunto de entrenamiento y test.
 
@@ -612,6 +612,19 @@ Se han usado los parámetros por defecto para el gráfico pues el resultado es m
 
 
 %% Comentar la distribución en clases de los datos
+
+
+
+Se ha intentado explorar un poco los datos para ver qué tipo de transformaciones pueden ser buenas para el conjunto de datos. Lo primero que se hace es ver que , como al ver que los datos tienen valores muy pequeños (muy por debajo de 1), se busca si hay columnas de datos que tengan varianza menor a un umbral. Sobre los datos recién llegados, el resultado obtenido es:
+\begin{lstlisting}[language=Python]
+  There are 30 cols with variance lesser than 0.01
+\end{lstlisting}
+Este número parece muy elevado , pero tiene sentido debido a los valores tan pequeños que toma nuestro conjunto de datos. Así que pensamos que una parte del preprocesado de datos será de nuevo \textbf{estandarizar} nuestros datos.
+
+Se comprueba mediante la creación de un \lstinline{pipeline} que si se estandarizan los datos y luego se intenta hacer \lstinline{VarianceThreshold(0.01)} (es decir, eliminar esas columnas que tengan varianza inferior a $0.01$), no se elimina ninguna columna, por lo que a priori podríamos decir que todas las variables dan información.
+
+Veamos 
+
 
 
 \subsection{La clase de funciones $\mathcal H$.}

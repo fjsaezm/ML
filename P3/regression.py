@@ -9,10 +9,7 @@ from sklearn.decomposition import PCA
 import seaborn as sn
 from sklearn.pipeline import Pipeline
 from timeit import default_timer
-from sklearn.feature_selection import VarianceThreshold
 from sklearn.linear_model import SGDRegressor, LinearRegression, Ridge
-from sklearn.exceptions import ConvergenceWarning
-import warnings
 from sklearn.metrics import mean_squared_error
 
 

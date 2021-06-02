@@ -7,9 +7,14 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-import seaborn as sn
 from sklearn.manifold import TSNE
 from matplotlib import cm
+from sklearn.feature_selection import VarianceThreshold
+import seaborn as sn
+from sklearn.pipeline import Pipeline
+from timeit import default_timer
+from sklearn.linear_model import SGDRegressor, LinearRegression, Ridge
+from sklearn.metrics import mean_squared_error
 
 
 np.random.seed(1)
@@ -35,8 +40,8 @@ def read_data(path = path_data,test_size = 0.3):
             X.append([float(v) for v in vec[0:len(vec)-1]])
             y.append(int(vec[-1]))
 
-        return train_test_split(X,y,test_size = test_size,random_state = SEED)
-
+        X_train,X_test,y_train,y_test = train_test_split(X,y,test_size = test_size,random_state = SEED)
+        return np.array(X_train),np.array(X_test),np.array(y_train),np.array(y_test)
 
 
 def scatter_plot(X, y, axis, ws = None, labels = None, title = None,
@@ -98,15 +103,86 @@ def scatter_plot(X, y, axis, ws = None, labels = None, title = None,
 
     wait()
 
+# Plot class distribution in train and test
+def plot_class_distribution(y_train, y_test, n_classes, save_figures = False, img_path = ""):
+
+    fig, axs = plt.subplots(1, 2, figsize = (12, 6))
+    plt.suptitle("Distribución de clases", y = 0.96)
+    
+    # Diagrama de barras en entrenamiento
+    axs[0].bar(np.unique(y_train), [y_train.tolist().count(i) for i in np.unique(y_train)],
+        color = cm.get_cmap('plasma',n_classes).colors)
+    axs[0].title.set_text("Entrenamiento")
+    axs[0].set_xlabel("Clases")
+    axs[0].set_ylabel("Número de ejemplos")
+    axs[0].set_xticks(range(n_classes))
+
+    # Diagrama de barras en test
+    axs[1].bar(np.unique(y_test), [y_test.tolist().count(i) for i in np.unique(y_test)],
+        color = cm.get_cmap('plasma',n_classes).colors)
+    axs[1].title.set_text("Test")
+    axs[1].set_xlabel("Clases")
+    axs[1].set_ylabel("Número de ejemplos")
+    axs[1].set_xticks(range(n_classes))
+
+    if SAVE:
+        plt.savefig(img_path + "class_distr.pdf")
+        
+    plt.show()
+    
+    wait()
+    
+# Correlation Matrix of a set of data
+def corr_matrix(data,name_fig):
+    df = pd.DataFrame(data,columns = np.arange(data.shape[1]))
+    corr_m = df.corr().abs()
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cax = ax.matshow(corr_m,cmap = 'coolwarm',vmin = 0,vmax = 1)
+    fig.colorbar(cax)
+
+    if SAVE:
+        plt.savefig("media/" + name_fig + ".pdf")
+    plt.show()
+    wait()
+
+
     
 # Read the data and split in subsets
 X_train,X_test,y_train,y_test =  read_data()
-X_train,X_test,y_train,y_test = np.array(X_train),np.array(X_test),np.array(y_train),np.array(y_test)
-print(X_train.shape)
-pca = PCA(n_components = 30 )
-X_pca = pca.fit_transform(X_train)
-tsne = TSNE()
-scatter_plot(tsne.fit_transform(X_pca),y_train,axis = ["x", "y"],title = "Proyección 2-dimensional con TSNE",figname = "tsne")
+
+# TSNE code commented since execution time is too high and the results are meaningless
+#X_train,X_test,y_train,y_test = np.array(X_train),np.array(X_test),np.array(y_train),np.array(y_test)
+#tsne = TSNE()
+#scatter_plot(tsne.fit_transform(X_pca),y_train,axis = ["x", "y"],title = "Proyección 2-dimensional con TSNE",figname = "tsne")
 #print(X_train)
 #print(y_train)
+
+df = pd.DataFrame(X_train,columns = np.arange(X_train.shape[1]))
+sum = 0
+for col in df.columns:
+    if df.var()[col] < 0.01:
+        sum += 1
+print("There are {} cols with variance lesser than 0.01".format(sum))
+
+preprocess = [
+    ("standardize",StandardScaler()),
+    ("var-threshold", VarianceThreshold(0.01))
+]
+
+preprocess_pipeline = Pipeline(preprocess)
+
+print("Before pipeline: {}".format(X_train.shape))
+X_train_pre = preprocess_pipeline.fit_transform(X_train)
+print("After pipeline: {}".format(X_train_pre.shape))
+
+
+
+
+
+#plot_class_distribution(y_train, y_test, n_classes = 11, img_path = "media/")
+
+
+corr_matrix(X_train_pre,"corr-standarized-classification")
 
