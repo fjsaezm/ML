@@ -12,6 +12,9 @@ from timeit import default_timer
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.linear_model import SGDRegressor, LinearRegression, Ridge
 from sklearn.exceptions import ConvergenceWarning
+import warnings
+from sklearn.metrics import mean_squared_error
+
 
 np.random.seed(1)
 
@@ -75,9 +78,47 @@ def corr_matrix(data,name_fig):
     wait()
 
 
+# Given Model Pipe and parameter space, apply gridsearch
+# Return the result of GridSearchCV
+def gridSearch(model_pipe,search_space,csv_title):
+    start = default_timer()
+    best_reg = GridSearchCV(model_pipe, search_space, scoring = "neg_mean_squared_error", cv = 5, n_jobs = -1)
+    best_reg.fit(X_train,y_train)
+    end = default_timer() - start
+    
+    print("Terminado en {}.".format(end))
+
+
+    if SAVE:
+        df = pd.concat([pd.DataFrame(best_reg.cv_results_["params"]),pd.DataFrame(-best_reg.cv_results_["mean_test_score"])],axis = 1)
+        df.to_csv(csv_title,float_format='%.5f')
+
+    return best_reg
+
+
+# Prints best model in the grid
+def print_best(grid):
+
+    print(" ----- Mejor regresor lineal encontrado ------")
+    print(" - Parámetros:")
+    print(grid.best_params_['reg'])
+    print(" - Error en Cross Validation")
+    print(-grid.best_score_)
+    print("----------------------------------------------")
+
+#Prints all models in the grid: params and scores
+def print_all_scores(grid):
+    print("Grid scores")
+    means = best_reg.cv_results_['mean_test_score']
+    stds = best_reg.cv_results_['std_test_score']
+    for mean, std, params in zip(means, stds, best_reg.cv_results_['params']):
+        print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
+
+
+
 
 # -------------------------------------------------------------------
-# ------------ IMPLEMENTATION BEGINS HERE ---------------------------
+# ------------------------ VISUALIZATION ----------------------------
 # -------------------------------------------------------------------
 
 
@@ -118,32 +159,41 @@ upper = corr_m.where(np.triu(np.ones(corr_m.shape), k=1).astype(bool))
 to_drop = [column for column in upper.columns if any(upper[column] >= 0.95)]
 
 
-X_train_rem = X_train.copy()
-X_train_rem = np.delete(X_train_rem, np.array(to_drop), axis = 1)
+#X_train_rem = X_train.copy()
+#X_train_rem = np.delete(X_train_rem, np.array(to_drop), axis = 1)
 print("There are {} variables which correlation with another is greater than 0.95".format(len(to_drop)))
 
 
-#Pipelines
-#from sklearn.ensemble import IsolationForest
-#clf = IsolationForest(random_state=SEED).fit(X_train)
-#arr = clf.predict(X_train)
 
-#X_train = X_train[np.where(arr == 1)]
-#y_train = y_train[np.where(arr == 1)]
 
+
+
+# -------------------------------------------------------------------
+# ------------------------ TRAINING MODEL ---------------------------
+# -------------------------------------------------------------------
+
+# Define pipelines for only Scaler and PCA
 preprocess = [
-    #("pre-standardize", StandardScaler()),
-    #("PCA", PCA(n_components = 0.95)),
+    ("standardize",StandardScaler())
+]
+
+preprocess_pca = [
+    ("pre-standardize", StandardScaler()),
+    ("PCA", PCA(n_components = 0.95)),
     ("standardize",StandardScaler())
 ]
 preprocess_pipeline = Pipeline(preprocess)
+preprocess_pca_pipeline = Pipeline(preprocess_pca)
 
+# Apply pipeline to Xtrain to fit it for the test
 X_train_pre = preprocess_pipeline.fit_transform(X_train)
+X_train_pre_pca = preprocess_pca_pipeline.fit_transform(X_train)
 
-#corr_matrix(X_train_pre,"corr-pca")
+
 
 # By using LinearRegression(), we can use later any linear regression
 model_pipe = Pipeline(preprocess + [("reg",LinearRegression())])
+model_pca_pipe = Pipeline(preprocess_pca + [("reg", LinearRegression())])
 
 search_space = [
     {"reg": [SGDRegressor(penalty = 'l2',
@@ -160,42 +210,51 @@ search_space = [
 
 ]
 
-print("Realizando la búsqueda en el espacio dado de modelos lineales...", flush = True)
-start = default_timer()
-best_reg = GridSearchCV(model_pipe, search_space, scoring = "neg_mean_squared_error", cv = 5, n_jobs = -1)
+#-------------------------------------------------
+# Search only standarizing
+print("Realizando la búsqueda en el espacio dado de modelos lineales solo con estandarización...", flush = True)
 
-best_reg.fit(X_train_rem,y_train)
-end = default_timer() - start
-
-
-#df = pd.DataFrame({'param':best_reg.cv_results_["params"], 'MSE' : best_reg.cv_results_['mean_test_score']})
-
-
-
-df = pd.concat([pd.DataFrame(best_reg.cv_results_["params"]),pd.DataFrame(-best_reg.cv_results_["mean_test_score"])],axis = 1)
-
-print(df)
-#df = pd.DataFrame({'MSE': -best_reg.cv_results_['mean_test_score'],
-#                   'Regressor': best_reg.cv_results_["params"][:]['reg'],
-#                   'alpha': best_reg.cv_results_["params"][:]['reg__alpha'],
-#                   'maxIter': best_reg.cv_results_["params"][:]['reg__max_iter'],
-#                   'learningRate': best_reg.cv_results_["params"][:]['reg__learning_rate']})
+only_standarization = gridSearch(model_pipe,search_space,"only-standarization-results.csv")
 
 
 
 
-exit()
 
-print("Terminado en {}.".format(end))
+#-------------------------------------------------
+# Search using PCA
+print("Realizando la búsqueda en el espacio dado de modelos lineales aplicando PCA...", flush = True)
+pca_best = gridSearch(model_pca_pipe,search_space,"pca-results.csv")
 
-print(" ----- Mejor regresor lineal encontrado ------")
-print(" - Parámetros:")
-print(best_reg.best_params_['reg'])
-print(" - Error en Cross Validation")
-print(-best_reg.best_score_)
-print("----------------------------------------------")
-print("Grid scores")
-means = best_reg.cv_results_['mean_test_score']
-stds = best_reg.cv_results_['std_test_score']
-for mean, std, params in zip(means, stds, best_reg.cv_results_['params']):
-    print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
+print("Mejor en solo estandarización")
+print_best(only_standarization)
+print("Mejor usando PCA")
+print_best(pca_best)
+
+
+# -------------------------------------------------------------------
+# ---------------------- EVALUATE IN TEST ---------------------------
+# -------------------------------------------------------------------
+
+
+best_model = only_standarization.best_estimator_
+
+print("Entrenando el mejor modelo en el conjunto de entrenamiento completo...")
+best_model.fit(X_train_pre,y_train)
+X_test_pre = preprocess_pipeline.transform(X_test)
+print("Prediciendo etiquetas en el conjunto de test...")
+pred_y_test = best_model.predict(X_test_pre)
+mse_test = mean_squared_error(y_test,pred_y_test)
+r_squared = best_model.score(X_test_pre,y_test)
+
+
+print("-----------------------------------------")
+print("-----------------------------------------")
+print("------ RESULTADOS FINALES EN TEST -------\n")
+print("\t- MSE: {}".format(mse_test))
+print("\t- R^2: {} ".format(r_squared))
+
+
+
+
+
+

@@ -36,6 +36,7 @@
 \usepackage[a4paper,margin=1in]{geometry}
 \usepackage[protrusion=true,expansion=true]{microtype}
 \usepackage{mathpazo}
+\usepackage{ stmaryrd }
 
 % Indentación de párrafos para Palatino
 \setlength{\parindent}{0pt}
@@ -111,6 +112,9 @@
 %%% Bibliografía
 \usepackage[backend=biber]{biblatex}
 \addbibresource{citations.bib}
+
+
+\usepackage{parcolumns}
 
 
 \newcommand{\training}{\textit{training }}
@@ -374,6 +378,23 @@ Esta métrica de error penaliza mucho los \emph{outliers} pues la distancia entr
 
 Sin embargo, esta métrica es idónea pues para que la regresión sea buena, lo que se pretenderá es que dentro de este conjunto de datos las distancias entre el valor predicho por nuestra regresión y el valor que tenemos como dato, $y_i$, sean lo más parecido posibles, por lo que es sin duda la mejor métrica de error a usar.
 
+Hay que remarcar que para evaluar los modelos en el entrenamiento, este error se medirá en cada una de las particiones de la validación crucada y luego se hará una media de ellos para obtener:
+$$
+E_{cv} = \sum_{i = 1}^n MSE_i(h),
+$$
+
+que será el que se usará para determinar el modelo que escogeremos como el mejor finalmente.
+
+Para medir el error final en el conjunto de test, usaremos también el coeficiente de determinación $R^2$. Este coeficiente mide la proporción de la varianza en la variable independiente que es predecible mediante la(s) variable(s) independiente(s). Concretamente, si consideramos $\bar{y}$ como el valor medio de las etiquetas, y consideramos las cantidades:
+\[
+SS_{tot} = \sum_i(y_i - \bar{y})^2 \quad y \quad SS_{res} = \sum_i(y_i - h(x_i))^2,
+\]
+calculamos $R^2$ como:
+$$
+R^2 =  1 - \frac{SS_{res}}{SS_{tot}}.
+$$
+
+Para interpretar esta medida, hay que saber que cuanto mejor sea el ajuste, menor es el cociente ,y más cercano es el valor de $R^2$ a $1$, por lo que lo ideal es que $R^2$ sea lo más grande posible.
 
 \subsection{Regularización y parámetros del modelo.}
 
@@ -400,9 +421,10 @@ En ambos casos, estamos añadiendo a la pérdida una penalización multiplicada 
 
 La diferencia entre ambas es que en la regularización $L_1$ ayuda a seleccionar variables eliminando aquellas que tienen menos relevancia. La $L_2$ funciona mejor cuando se piensa que todas las variables son relevantes para la predicción. Además, el término que ésta introduce es diferenciable lo cual tiene ventajas computacionales. 
 
-En este caso ya habíamos tratado de seleccionar las características que mejor explicasen la varianza del conjunto mediante PCA. Es por todo ello que elegimos usar la regularización $L_2$ en este problema. 
+En este caso ya habíamos tratado de seleccionar las características que mejor explicasen la varianza del conjunto mediante PCA. Es por todo ello que elegimos usar la regularización $L_2$ en este problema. Como el número de parámetros a entrenar no es muy elevado, se ha decidido optar también por ampliar nuestras opciones en la búsqueda del mejor modelo y usar \textbf{también} esta regularización sobre el total de las características. 
 % https://medium.com/analytics-vidhya/l1-vs-l2-regularization-which-is-better-d01068e6658c
 
+\subsubsection{Parámetros de búsqueda.}
 
 Quedaría por discutir los demás hiperparámetros con los que vamos a realizar nuestro entrenamiento. Estimar los mejores parámetros para un modelo es una tarea compleja. La mejor opción en la práctica es tomar para cada hiperparámetro un conjunto de valores que sepamos empíricamente que han dado buenos resultados en problemas similares y hacer una búsqueda haciendo combinaciones de esos valores de hiperparámetros para tratar de encontrar cuál es la combinación que mejor se ajusta a nuestro problema completo. Todo ello lo podemos realizar con la función de \lstinline{sklearn} :  \lstinline{GridSearchCV}.
 
@@ -438,9 +460,89 @@ Queda por concretar los valores concretos que se le dan a los parámetros que se
 
 \subsection{Selección de hipótesis.}
 
+Llegados a este punto, es el momento de explorar nuestro espacio de parámetros para encontrar el modelo que menor $E_{cv}$  tenga. Hay que mencionar que estos resultados se han obtenido utilizando el procesador de mi ordenador portátil: \emph{AMD Ryzen 7 4800h with radeon graphics × 16}.
+
+Finalmente, se decide por aplicar los mismos modelos con los mismos parámetros de búsqueda en dos preprocesados de los datos diferentes, para comprobar si la aplicación de la reducción de la dimensionalidad en este problema nos ayuda o empeora nuestros resultados. Para ello, nos basta crear dos \lstinline{Pipeline}s de python y ejecutar nuestro \lstinline{GridScoreCV} dos veces.
+
+\begin{minipage}{\textwidth}
+  \begin{parcolumns}{2}
+    \colchunk{\begin{lstlisting}[caption=Pipeline Standardization]{Name}
+
+        preprocess = [
+          ("standardize",StandardScaler())
+        ]
+        
+    \end{lstlisting}}
+
+    \colchunk{\begin{lstlisting}[caption=Pipeline PCA]{Name}
+
+        preprocess_pca = [
+          ("pre-standardize", StandardScaler()),
+          ("PCA", PCA(n_components = 0.95)),
+          ("standardize",StandardScaler())
+        ]
+    \end{lstlisting}}
+
+    \colplacechunks
+  \end{parcolumns}
+\end{minipage}
+
+Tras tener estos \emph{pipelines} creados y nuestro espacio de parámetros para la búsqueda creados, ejecutamos el método de búsqueda.
+
+\begin{minipage}{\textwidth}
+\begin{parcolumns}{2}
+  \colchunk{\begin{lstlisting}[caption=Estandarizacion]{Name}
+    
+      Mejor en solo estandarizacion
+      ----- Mejor regresor lineal encontrado ------
+      - Parametros:
+      Ridge(alpha=0.1, max_iter=5000)
+      - Error en Cross Validation
+      310.2545634883221
+  \end{lstlisting}}
+
+  \colchunk{\begin{lstlisting}[caption=PCA]{Name}
+
+      Mejor usando PCA
+      ----- Mejor regresor lineal encontrado ------
+      - Parametros:
+      Ridge(alpha=0.1, max_iter=5000)
+      - Error en Cross Validation
+      467.96851110824326
+  \end{lstlisting}}
+
+  \colplacechunks
+\end{parcolumns}
+\end{minipage}
+
+Comparando los dos casos que hemos planteado para la búsqueda del mejor modelo, vemos que la hipótesis que mejor resultados nos ofrece en cuanto a minimización del $E_{cv}$, con una diferencia de más de $150$ unidades, es el modelo que \textbf{solamente realiza estandarización} en los datos y utiliza como regresor lineal el modelo \lstinline{Ridge} de \lstinline{sklearn}. Es por ello que nuestra hipótesis final $g$ será:
+$$
+g = \text{Ridge}(alpha = 0.1, max\_iter = 5000).
+$$
+Hay que destacar en los resultados que , cuando se utiliza preprocesamiento de los datos usando también PCA, el modelo que mejor resultados obtiene es el mismo. Esto nos puede indicar que, aunque estemos intentando mantener una gran cantidad de información explicada reduciendo las características, reducir las características nos está haciendo perder información sobre cómo se relacionan estas con la función $f$ que tenemos que aproximar.
+
+La regresión usando \lstinline{Ridge} ha dado los mejores resultados aún variando un poco los parámetros. Se observa que para cualquier valor que se le proporcione de constante de regularización $\lambda$ (alpha según \lstinline{sklearn}), se obtienen errores en validación cruzada muy similares.
+
+Además, se ha optado por usar este método de regresión porque es el que menor $E_{cv}$ nos da, pero usando el modelo de sklearn \lstinline{SGDRegressor} (que sabemos que hace regresión lineal usando SGD) con parámetros $\lambda = 0.0001$, $max\_iter = 5000$ y \emph{learning rate} adaptativo, se ha obtenido un $E_{cv} = 312.1983$, que se encuentra bastante cercano al error que nos da el mejor método.
+
+Más información sobre los valores obtenidos para cada conjunto de parámetros fijo en cada uno de los algoritmos de minimización del error se puede observar en el apéndice \ref{apend:regresion} que se ha incluido para evitar rellenar el documento con tablas.
+
+Mirando las tablas, podemos observar que en general el regresor que aplica la regularización de forma directa (\lstinline{Ridge}), ha obtenido resultados muchos mejores mientras que \lstinline{SGDRegressor} le ocurre que en algunos valores de $\lambda$ y formas de actualizar $\eta$, obtiene errores en cross validation demasiado grandes. Esto es posiblemente porque necesite un número de iteraciones muchísimo más alto para encontrar una recta de regresión que aproxime nuestros datos al nivel que lo hacen los demás aproximadores. Además, con algunos valores de estos mismos parámetros, el algoritmo no es capaz hacer qeu el error se aproxime al mínimo que sabemos que podemos obtener con otros parámetros.
+
 \subsection{Error final fuera de la muestra.}
 
+Nos queda por ver cómo de bien hemos conseguido \emph{``generalizar''} , usando el conjunto que hemos dejado desde el principio fuera de todas nuestras operaciones para evitar el \emph{data snooping}.
 
+
+
+\begin{lstlisting}[language=Python]
+
+  ------ RESULTADOS FINALES EN TEST -------
+
+	- MSE: 313.4691035257312
+	- R^2: 0.7366585080400442 
+
+\end{lstlisting}
 
 
 
@@ -571,4 +673,91 @@ el acierto medio de la hipótesis.
 \newpage
 \printbibliography
 
+\newpage
+
+\section{Apéndice}
+
+\subsection{Resultados de los modelos en Regresión}
+\label{apend:regresion}
+
+Se incluyen las tablas con los resultados de los modelos para el problema de regresión. Se incluye una tabla con el preprocesado de solo estandarización y otra con estandarización y PCA.
+
+\begin{table}[h!]
+\begin{tabular}{lrlrr}
+Regressor                        & $\lambda$ & $\eta$   & $max\_iter$ & $E_{cv}$                \\ \hline
+SGDRegressor                     & 0.10000   & constant & 5000        & 636.93796          \\
+                                 & 0.10000   & constant & 10000       & 636.93796          \\
+                                 & 0.10000   & optimal  & 5000        & 2179664857.58336   \\
+                                 & 0.10000   & optimal  & 10000       & 473348330.41042    \\
+                                 & 0.10000   & adaptive & 5000        & 364.28276          \\
+                                 & 0.10000   & adaptive & 10000       & 364.28276          \\
+                                 & 0.01000   & constant & 5000        & 612.90878          \\
+                                 & 0.01000   & constant & 10000       & 612.90878          \\
+                                 & 0.01000   & optimal  & 5000        & 11859081963.44443  \\
+                                 & 0.01000   & optimal  & 10000       & 2425006432.49777   \\
+                                 & 0.01000   & adaptive & 5000        & 329.95897          \\
+                                 & 0.01000   & adaptive & 10000       & 329.95897          \\
+                                 & 0.00100   & constant & 5000        & 651.00770          \\
+                                 & 0.00100   & constant & 10000       & 651.00770          \\
+                                 & 0.00100   & optimal  & 5000        & 107610500809.15002 \\
+                                 & 0.00100   & optimal  & 10000       & 22183869730.15907  \\
+                                 & 0.00100   & adaptive & 5000        & 314.26437          \\
+                                 & 0.00100   & adaptive & 10000       & 314.26437          \\
+                                 & 0.00010   & constant & 5000        & 662.74988          \\
+                                 & 0.00010   & constant & 10000       & 662.74988          \\
+                                 & 0.00010   & optimal  & 5000        & 418399887304.88763 \\
+                                 & 0.00010   & optimal  & 10000       & 418399887304.88763 \\
+                                 & 0.00010   & adaptive & 5000        & 312.19840          \\
+                                 & 0.00010   & adaptive & 10000       & 312.19840          \\
+\textbf{Ridge}                            & \textbf{0.10000}   &          & \textbf{5000}        & \textbf{310.25456}          \\
+                                 & 0.10000   &          & 10000       & 310.25456          \\
+                                 & 0.01000   &          & 5000        & 310.25458          \\
+                                 & 0.01000   &          & 10000       & 310.25458          \\
+                                 & 0.00100   &          & 5000        & 310.25665          \\
+                                 & 0.00100   &          & 10000       & 310.25665          \\
+                                 & 0.00010   &          & 5000        & 310.25688          \\
+                                 & 0.00010   &          & 10000       & 310.25688         
+\end{tabular}
+\caption{Resultados obtenidos según los parámetros usando sólo estandarización.}
+\end{table}
+
+
+\begin{table}[h!]
+\begin{tabular}{lrlrr}
+Regressor    & $\lambda$ & $\eta$   & $max\_iter$ & $E_{cv}$  \\ \hline
+SGDRegressor & 0.10000   & constant & 5000        & 510.56864 \\
+             & 0.10000   & constant & 10000       & 510.56864 \\
+             & 0.10000   & optimal  & 5000        & 473.66396 \\
+             & 0.10000   & optimal  & 10000       & 473.66396 \\
+             & 0.10000   & adaptive & 5000        & 473.59663 \\
+             & 0.10000   & adaptive & 10000       & 473.59663 \\
+             & 0.01000   & constant & 5000        & 510.15916 \\
+             & 0.01000   & constant & 10000       & 510.15916 \\
+             & 0.01000   & optimal  & 5000        & 468.05363 \\
+             & 0.01000   & optimal  & 10000       & 468.05363 \\
+             & 0.01000   & adaptive & 5000        & 468.02466 \\
+             & 0.01000   & adaptive & 10000       & 468.02466 \\
+             & 0.00100   & constant & 5000        & 511.68573 \\
+             & 0.00100   & constant & 10000       & 511.68573 \\
+             & 0.00100   & optimal  & 5000        & 472.34160 \\
+             & 0.00100   & optimal  & 10000       & 472.34160 \\
+             & 0.00100   & adaptive & 5000        & 467.97220 \\
+             & 0.00100   & adaptive & 10000       & 467.97220 \\
+             & 0.00010   & constant & 5000        & 511.73210 \\
+             & 0.00010   & constant & 10000       & 511.73210 \\
+             & 0.00010   & optimal  & 5000        & 498.85089 \\
+             & 0.00010   & optimal  & 10000       & 498.85089 \\
+             & 0.00010   & adaptive & 5000        & 467.97353 \\
+             & 0.00010   & adaptive & 10000       & 467.97353 \\
+Ridge        & 0.10000   &          & 5000        & 467.96851 \\
+             & 0.10000   &          & 10000       & 467.96851 \\
+             & 0.01000   &          & 5000        & 467.96852 \\
+             & 0.01000   &          & 10000       & 467.96852 \\
+             & 0.00100   &          & 5000        & 467.96852 \\
+             & 0.00100   &          & 10000       & 467.96852 \\
+             & 0.00010   &          & 5000        & 467.96852 \\
+             & 0.00010   &          & 10000       & 467.96852
+\end{tabular}
+\caption{Resultados obtenidos según los parámetros usando estandarización y PCA.}
+\end{table}
 \end{document}
