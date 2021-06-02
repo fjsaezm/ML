@@ -239,12 +239,11 @@ print_best(pca_best)
 best_model = only_standarization.best_estimator_
 
 print("Entrenando el mejor modelo en el conjunto de entrenamiento completo...")
-best_model.fit(X_train_pre,y_train)
-X_test_pre = preprocess_pipeline.transform(X_test)
+best_model.fit(X_train,y_train)
 print("Prediciendo etiquetas en el conjunto de test...")
-pred_y_test = best_model.predict(X_test_pre)
+pred_y_test = best_model.predict(X_test)
 mse_test = mean_squared_error(y_test,pred_y_test)
-r_squared = best_model.score(X_test_pre,y_test)
+r_squared = best_model.score(X_test,y_test)
 
 
 print("-----------------------------------------")
