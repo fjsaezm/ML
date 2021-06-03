@@ -155,9 +155,8 @@ X_train,X_test,y_train,y_test =  read_data()
 # TSNE code commented since execution time is too high and the results are meaningless
 #X_train,X_test,y_train,y_test = np.array(X_train),np.array(X_test),np.array(y_train),np.array(y_test)
 #tsne = TSNE()
-#scatter_plot(tsne.fit_transform(X_pca),y_train,axis = ["x", "y"],title = "Proyección 2-dimensional con TSNE",figname = "tsne")
-#print(X_train)
-#print(y_train)
+#scatter_plot(tsne.fit_transform(X_train.copy()),y_train,axis = ["x", "y"],title = "Proyección 2-dimensional con TSNE",figname = "tsne")
+
 
 df = pd.DataFrame(X_train,columns = np.arange(X_train.shape[1]))
 sum = 0
@@ -181,7 +180,7 @@ print("After pipeline: {}".format(X_train_pre.shape))
 
 
 
-#plot_class_distribution(y_train, y_test, n_classes = 11, img_path = "media/")
+plot_class_distribution(y_train, y_test, n_classes = 11, img_path = "media/")
 
 
 corr_matrix(X_train_pre,"corr-standarized-classification")
