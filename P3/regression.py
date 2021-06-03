@@ -106,11 +106,41 @@ def print_best(grid):
 #Prints all models in the grid: params and scores
 def print_all_scores(grid):
     print("Grid scores")
-    means = best_reg.cv_results_['mean_test_score']
-    stds = best_reg.cv_results_['std_test_score']
-    for mean, std, params in zip(means, stds, best_reg.cv_results_['params']):
+    means = grid.cv_results_['mean_test_score']
+    stds = grid.cv_results_['std_test_score']
+    for mean, std, params in zip(means, stds, grid.cv_results_['params']):
         print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
 
+
+# Plot y_predicted vs y_true
+def plot_residues_error(y_true, y_pred):
+
+    fig, axs = plt.subplots()
+
+    reg = LinearRegression()
+    
+    # Prediction error
+    x = y_true.reshape(-1, 1)
+    y = y_pred
+    axs.scatter(x, y, facecolors = 'none', edgecolors = 'tab:blue', marker = '.')
+    axs.set_xlabel("y")
+    axs.set_ylabel("y_pred")
+    axs.set_title("Error de predicción")
+
+    # Adjust linear regressor and show identity
+    reg.fit(x, y)
+    m = reg.coef_[0]
+    b = reg.intercept_
+    xx = np.array([x.min() - 0.1, x.max() + 0.1])
+    axs.plot(xx, m * xx + b, color = 'blue', ls = "--", lw = 2, label = "Mejor ajuste")
+    axs.plot(xx, xx, color = 'red', ls = "--", lw = 2, label = "Identidad")
+    axs.legend()
+
+    if SAVE:
+        plt.savefig("media/" + "residues_error.pdf")
+    
+    plt.show()
+    wait()
 
 
 
@@ -249,6 +279,8 @@ print("------ RESULTADOS FINALES EN TEST -------\n")
 print("\t- MSE: {}".format(mse_test))
 print("\t- R^2: {} ".format(r_squared))
 
+
+plot_residues_error(y_test, pred_y_test)
 
 
 

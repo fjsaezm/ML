@@ -519,9 +519,11 @@ Comparando los dos casos que hemos planteado para la búsqueda del mejor modelo,
 $$
 g = \text{Ridge}(alpha = 0.1, max\_iter = 5000).
 $$
-Hay que destacar en los resultados que , cuando se utiliza preprocesamiento de los datos usando también PCA, el modelo que mejor resultados obtiene es el mismo. Esto nos puede indicar que, aunque estemos intentando mantener una gran cantidad de información explicada reduciendo las características, reducir las características nos está haciendo perder información sobre cómo se relacionan estas con la función $f$ que tenemos que aproximar.
+Hay que destacar en los resultados que , cuando se utiliza preprocesamiento de los datos usando también PCA, el modelo que mejor resultados obtiene es el mismo. Esto nos puede indicar que, aunque estemos intentando mantener una gran cantidad de información explicada reduciendo las características, reducir las características nos está haciendo perder información sobre cómo se relacionan estas con la función $f$ que tenemos que aproximar, pero este sigue siendo el mejor modelo a aplicar para estos datos.
 
-La regresión usando \lstinline{Ridge} ha dado los mejores resultados aún variando un poco los parámetros. Se observa que para cualquier valor que se le proporcione de constante de regularización $\lambda$ (alpha según \lstinline{sklearn}), se obtienen errores en validación cruzada muy similares.
+La regresión usando \lstinline{Ridge} ha dado los mejores resultados aún variando un poco los parámetros. Se observa que para cualquier valor que se le proporcione de constante de regularización $\lambda$ (alpha según \lstinline{sklearn}), se obtienen errores en validación cruzada muy similares. 
+
+Sobre los parámetros concretos que hemos obtenido como mejores, hay que ver que $\lambda = 0.1$ es un valor de regularización razonablemente alto en comparación con el resto de posibilidades que ofrecíamos. Es por ello que podemos afirmar que la regularización ha tenido un papel importante en nuestro entrenamiento, llevándonos a valores menores del error cuadrático medio. Además, el número de iteraciones $5000$ es el más pequeño proporcionado en este caso, por lo que podemos decir que el algoritmo ha sido capaz de converger razonablemente rápido.
 
 Además, se ha optado por usar este método de regresión porque es el que menor $E_{cv}$ nos da, pero usando el modelo de sklearn \lstinline{SGDRegressor} (que sabemos que hace regresión lineal usando SGD) con parámetros $\lambda = 0.0001$, $max\_iter = 5000$ y \emph{learning rate} adaptativo, se ha obtenido un $E_{cv} = 312.1983$, que se encuentra bastante cercano al error que nos da el mejor método.
 
@@ -547,6 +549,10 @@ Se calculan entonces el error cuadrático medio en el conjunto de test y el coef
 \end{lstlisting}
 
 
+Como se puede observar, el error cuadrático medio en el conjunto de test no sufre una gran variación con respecto al que habíamos obtenido en validación cruzada. Esto nos indica que hemos obtenido una generalización razonablemente buena, aunque el error no sea cercano a cero. Además, como sabemos que este error nos da una cota más precisa del error fuera de la muestra $E_{out}$, los resultados que se optienen podríamos afirmar que son satisfactorios en este sentido.
+
+
+En cuanto al coeficiente de determinación, vemos que obtenemos un valor de $0.73$. Sabiendo que esto se interpreta como que alrededor del $73\%$ de los datos caen sobre la recta de regresión, podemos afirmar que nuestra recta se encuentra ciertamente lejos de ser capaz de predecir con precisión los nuevos puntos que podamos encontrarnos.
 
 \newpage
 
@@ -678,11 +684,11 @@ También volveremos a utilizar en el entrenamiento $K-$\emph{Fold cross validati
 
 El procedimiento que seguiremos en este caso será el de crear diferentes \lstinline{pipelines} de preprocesamiento de datos con diferentes técnicas de reducción de dimensionalidad para estudiar si alguno de ellos es mejor para este problema, ya que hemos visto en la matriz de correlaciones que puede que haya características que sean suprimibles de cara al entrenamiento.
 
-En uno de de los \lstinline{pipelines} usaremos PCA, que ya ha sido comentado en la sección de regresión. Este es un algoritmo no supervisado, pues no necesita de las etiquetas para realizar su selección de características, cosa que sí hace el otro selector de características que usaremos:\textbf{ANOVA} (\emph{Analysis of variance}. Este selector basa su funcionamiento en el test estadístico \emph{F-test}, que estima el grado de dependencia lineal de las variables dos a dos y posteriormente ordena las variables de la más a la menos discriminativa. Una vez ordenadas, debemos seleccionar un número de variables con las que queremos quedarnos para realizar el entrenamiento.
+En uno de de los \lstinline{pipelines} usaremos PCA, que ya ha sido comentado en la sección de regresión. Este es un algoritmo no supervisado, pues no necesita de las etiquetas para realizar su selección de características, cosa que sí hace el otro selector de características que usaremos: \textbf{ANOVA} (\emph{Analysis of variance}). Este selector basa su funcionamiento en el test estadístico \emph{F-test}, que estima el grado de dependencia lineal de las variables dos a dos y posteriormente ordena las variables de la más a la menos discriminativa. Una vez ordenadas, debemos seleccionar un número de variables con las que queremos quedarnos para realizar el entrenamiento.
 
-ANOVA está implementado en \lstinline{sklearn} en la función \lstinline{f_classif} del módulo \lstinline{feature_selection}. Además, usamos luego de este mismo módulo  \lstinline{SelectKBest} para quedarnos con los $k$ primeros para obtener las variables más discriminativas.
+ANOVA está implementado en \lstinline{sklearn} en la función \lstinline{f_classif} del módulo \lstinline{feature_selection}. Además, usamos luego de este mismo módulo  \lstinline{SelectKBest} para quedarnos con los $k$ primeros para obtener las variables más discriminativas. En concreto, nos quedaremos con la mitad de las características, fijaremos el $k = 24$.
 
-Además de esta selección de características previa, realizamos también primero la estandarización que ya hemos realizado anteriormente.
+Además de esta selección de características previa, realizamos también primero la estandarización que ya hemos realizado anteriormente, pues hemos visto que de lo contrario la varianza entre los datos es demasiado pequeña.
 
 \subsubsection{Selección de modelos.}
 
@@ -716,6 +722,25 @@ $$
 Acc(h) = 1 - E(h),
 $$
 el acierto medio de la hipótesis.
+
+Usaremos el \emph{accuracy} del modelo como función a maximizar en la búsqueda en el espacio de parámetros. No obstante, una vez obtengamos el modelo que nos da más porcentaje de acierto en \emph{cross validation}, obtendremos otras métricas de este modelo. Recordemos que $TP$ hace mención a los positivos bien clasificados, $FP$ hace mención a los positivos que en realidad son negativos, y $TN$ se refiere a los negativos bien clasificados.
+
+\begin{enumerate}
+  \item \lstinline{precision_score}, que nos indica la habilidad que tiene nuestro modelo de no clasificar como positivo un ejemplo negativo. Se expresa como
+  $$
+  precission(y\_true,y\_pred) = \frac{TP}{TP + FP}
+  $$
+  \item \lstinline{recall_score}, que indica cómo de bueno es nuestro modelo encontrando \textbf{todos} los casos positivos. Matemáticamente:
+  \[
+    recall(y\_true,y\_pred) = \frac{TP}{TP + FN} 
+  \]
+  \item \lstinline{f1_score}, que es una media ponderada de las dos anteriores. Sabemos que $F1 \in [0,1]$, siendo $1$ el mejor valor y $0$ el peor. Se expresa como:
+  \[
+  F1(y\_true,y\_pred) = 2\frac{\operatorname{precision}\dot \operatorname{recall}}{\operatorname{precision} + \operatorname{recall}}
+  }
+  \]
+  A mayor valor de esta métrica, mejores valores estamos obteniendo de precisión y \emph{recall}
+\end{enumerate}
 
 \subsection{Regularización y parámetros del modelo.}
 

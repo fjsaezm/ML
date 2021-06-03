@@ -4,23 +4,27 @@ import pandas as pd
 import numpy as np 
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from matplotlib import cm
-from sklearn.feature_selection import VarianceThreshold
+from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
+from sklearn.linear_model import LogisticRegression
 import seaborn as sn
 from sklearn.pipeline import Pipeline
 from timeit import default_timer
 from sklearn.linear_model import SGDRegressor, LinearRegression, Ridge
-from sklearn.metrics import mean_squared_error
+
+from sklearn.metrics import precision_score,confusion_matrix,recall_score,f1_score
+from sklearn import svm
 
 
 np.random.seed(1)
 
 SAVE = True
 SEED = 2022
+show = False
 
 path_data = "data/clasificacion/Sensorless_drive_diagnosis.txt"
 
@@ -146,42 +150,126 @@ def corr_matrix(data,name_fig):
         plt.savefig("media/" + name_fig + ".pdf")
     plt.show()
     wait()
-
-
     
-# Read the data and split in subsets
+# Searches for the model that fits the best the data
+def gridSearch(model_pipe,search_space,csv_title):
+    start = default_timer()
+    best_reg = GridSearchCV(model_pipe, search_space, scoring = "accuracy", cv = 5, n_jobs = -1)
+    best_reg.fit(X_train,y_train)
+    end = default_timer() - start
+    
+    print("Terminado en {}.".format(end))
+
+
+    if SAVE:
+        df = pd.concat([pd.DataFrame(best_reg.cv_results_["params"]),pd.DataFrame(best_reg.cv_results_["mean_test_score"])],axis = 1)
+        df.to_csv(csv_title,float_format='%.5f')
+
+    return best_reg
+
+def print_best(grid):
+
+    print(" ----- Mejor clasificador lineal encontrado ------")
+    print(" - Parámetros:")
+    print(grid.best_params_['clf'])
+    print(" - Error en Cross Validation")
+    print(-grid.best_score_)
+    print("----------------------------------------------")
+
+
+# -------------------------------------------------------------------
+# ------------------------ VISUALIZATION ----------------------------
+# -------------------------------------------------------------------
+    
+if show:
+    # Read the data and split in subsets
+    X_train,X_test,y_train,y_test =  read_data()
+
+    # TSNE code commented since execution time is too high and the results are meaningless
+    #X_train,X_test,y_train,y_test = np.array(X_train),np.array(X_test),np.array(y_train),np.array(y_test)
+    #tsne = TSNE()
+    #scatter_plot(tsne.fit_transform(X_train.copy()),y_train,axis = ["x", "y"],title = "Proyección 2-dimensional con TSNE",figname = "tsne")
+
+
+    df = pd.DataFrame(X_train,columns = np.arange(X_train.shape[1]))
+    sum = 0
+    for col in df.columns:
+        if df.var()[col] < 0.01:
+            sum += 1
+    print("There are {} cols with variance lesser than 0.01".format(sum))
+
+    preprocess = [
+        ("standardize",StandardScaler()),
+        ("var-threshold", VarianceThreshold(0.01))
+    ]
+
+    preprocess_pipeline = Pipeline(preprocess)
+
+    print("Before pipeline: {}".format(X_train.shape))
+    X_train_pre = preprocess_pipeline.fit_transform(X_train)
+    print("After pipeline: {}".format(X_train_pre.shape))
+
+
+
+
+
+    plot_class_distribution(y_train, y_test, n_classes = 11, img_path = "media/")
+
+
+    corr_matrix(X_train_pre,"corr-standarized-classification")
+
+
+# -------------------------------------------------------------------
+# ------------------------ TRAINING MODEL ---------------------------
+# -------------------------------------------------------------------
+
+# Re-read the data
 X_train,X_test,y_train,y_test =  read_data()
 
-# TSNE code commented since execution time is too high and the results are meaningless
-#X_train,X_test,y_train,y_test = np.array(X_train),np.array(X_test),np.array(y_train),np.array(y_test)
-#tsne = TSNE()
-#scatter_plot(tsne.fit_transform(X_train.copy()),y_train,axis = ["x", "y"],title = "Proyección 2-dimensional con TSNE",figname = "tsne")
-
-
-df = pd.DataFrame(X_train,columns = np.arange(X_train.shape[1]))
-sum = 0
-for col in df.columns:
-    if df.var()[col] < 0.01:
-        sum += 1
-print("There are {} cols with variance lesser than 0.01".format(sum))
-
+# Define preprocessors
 preprocess = [
-    ("standardize",StandardScaler()),
-    ("var-threshold", VarianceThreshold(0.01))
+    ("standardize",StandardScaler())
 ]
 
-preprocess_pipeline = Pipeline(preprocess)
+preprocess_pca = [ 
+    ("pre-standardize", StandardScaler()),
+    ("PCA", PCA(n_components = 0.95)),
+    ("standardize",StandardScaler()),
+    ("var-thresh",VarianceThreshold()),
+]
 
-print("Before pipeline: {}".format(X_train.shape))
-X_train_pre = preprocess_pipeline.fit_transform(X_train)
-print("After pipeline: {}".format(X_train_pre.shape))
+preprocess_anova = [
+    ("pre-standardize", StandardScaler()),
+    ("ANOVA", SelectKBest(score_func=f_classif, k=24)),
+    ("standardize",StandardScaler()),
+    ("var-thresh",VarianceThreshold()),
+]
 
+preps = [preprocess, preprocess_pca,preprocess_anova]
 
+search_space = [
+        {"clf": [LogisticRegression(multi_class = 'ovr',
+                                    penalty = 'l2')],
+         "clf__C": [10**(-2),1,10**2],
+         "clf__max_iter":[5000,10000]},
+        {"clf": [svm.SVC(kernel='linear',
+                         decision_function_shape = 'ovr')],
+         "clf__C": [10**(-2),1,10**2],
+         "clf__max_iter":[5000,10000]
+        }
+]
 
-
-
-plot_class_distribution(y_train, y_test, n_classes = 11, img_path = "media/")
-
-
-corr_matrix(X_train_pre,"corr-standarized-classification")
-
+names = ["solo estandarización","estandarización y PCA", "estandarización y ANOVA"]
+csv_names = ["clf-standardized","clf-pca","clf-anova"]
+best_performers = []
+# Iterate through preprocessors
+for prep,name,csv_name in zip(preps,names,csv_names):
+    # Classificator is a placeholder, will be changed
+    model_pipe = Pipeline(prep + [('clf',LogisticRegression())])
+    print("Realizando la búsqueda en el espacio dado de modelos lineales con {}...".format(name), flush = True)
+    best = gridSearch(model_pipe,search_space,csv_name)
+    print_best(best)
+    best_performers.append(best)
+    
+    
+    
