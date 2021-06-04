@@ -15,7 +15,7 @@ from sklearn.metrics import mean_squared_error
 
 np.random.seed(1)
 
-SAVE = True
+SAVE = False
 SEED = 2022
 
 path_data = "data/regresion/train.csv"

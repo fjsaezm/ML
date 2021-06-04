@@ -14,17 +14,19 @@ from sklearn.linear_model import LogisticRegression
 import seaborn as sn
 from sklearn.pipeline import Pipeline
 from timeit import default_timer
-from sklearn.linear_model import SGDRegressor, LinearRegression, Ridge
+from sklearn.linear_model import SGDRegressor, LinearRegression
+from sklearn.metrics import classification_report
 
+from sklearn.metrics import plot_confusion_matrix
 from sklearn.metrics import precision_score,confusion_matrix,recall_score,f1_score
 from sklearn import svm
 
 
 np.random.seed(1)
 
-SAVE = True
+SAVE = False
 SEED = 2022
-show = False
+show = True
 
 path_data = "data/clasificacion/Sensorless_drive_diagnosis.txt"
 
@@ -152,10 +154,10 @@ def corr_matrix(data,name_fig):
     wait()
     
 # Searches for the model that fits the best the data
-def gridSearch(model_pipe,search_space,csv_title):
+def gridSearch(X,y,model_pipe,search_space,csv_title):
     start = default_timer()
     best_reg = GridSearchCV(model_pipe, search_space, scoring = "accuracy", cv = 5, n_jobs = -1)
-    best_reg.fit(X_train,y_train)
+    best_reg.fit(X_train_rem,y_train_rem)
     end = default_timer() - start
     
     print("Terminado en {}.".format(end))
@@ -172,18 +174,35 @@ def print_best(grid):
     print(" ----- Mejor clasificador lineal encontrado ------")
     print(" - Parámetros:")
     print(grid.best_params_['clf'])
-    print(" - Error en Cross Validation")
-    print(-grid.best_score_)
+    print(" - Accuracy en Cross Validation")
+    print(grid.best_score_)
     print("----------------------------------------------")
 
+# Plot confusion matrix using certain classifier and given a dataset.
+def confusion_matrix(clf, X, y):
+
+    fig, ax = plt.subplots(1, 1, figsize = (8, 6))
+    disp = plot_confusion_matrix(clf, X, y, cmap = cm.Blues, values_format = 'd', ax = ax)
+    disp.ax_.set_title("Matriz de confusión")
+    disp.ax_.set_xlabel("Etiqueta predicha")
+    disp.ax_.set_ylabel("Etiqueta real")
+
+    if SAVE:
+        plt.savefig("media/confusion.pdf")
+
+    plt.show()
+    wait()
 
 # -------------------------------------------------------------------
 # ------------------------ VISUALIZATION ----------------------------
 # -------------------------------------------------------------------
-    
+
+
+
+# Read the data and split in subsets
+X_train,X_test,y_train,y_test =  read_data()
+
 if show:
-    # Read the data and split in subsets
-    X_train,X_test,y_train,y_test =  read_data()
 
     # TSNE code commented since execution time is too high and the results are meaningless
     #X_train,X_test,y_train,y_test = np.array(X_train),np.array(X_test),np.array(y_train),np.array(y_test)
@@ -209,14 +228,27 @@ if show:
     X_train_pre = preprocess_pipeline.fit_transform(X_train)
     print("After pipeline: {}".format(X_train_pre.shape))
 
-
-
-
-
+    
     plot_class_distribution(y_train, y_test, n_classes = 11, img_path = "media/")
 
 
     corr_matrix(X_train_pre,"corr-standarized-classification")
+
+
+#Outlier detection
+from sklearn.ensemble import IsolationForest
+clf = IsolationForest(n_estimators = 1000, max_samples = 'auto',random_state = SEED).fit(X_train)
+val = clf.predict(X_train)
+print("There are outliers: ")
+out = np.where(val == -1)[0]
+print("Outliers represent:{}% so they will be eliminated".format((len(out)/X_train.shape[0])*100))
+print(len( np.where(val == -1)[0]))
+X_train_rem = np.array([X_train[i] for i in range(X_train.shape[0]) if i not in out])
+y_train_rem = np.array([y_train[i] for i in range(y_train.shape[0]) if i not in out])
+print("Shape before and after removing outliers")
+print(X_train.shape)
+print(X_train_rem.shape)
+
 
 
 # -------------------------------------------------------------------
@@ -224,7 +256,12 @@ if show:
 # -------------------------------------------------------------------
 
 # Re-read the data
-X_train,X_test,y_train,y_test =  read_data()
+#X_train,X_test,y_train,y_test =  read_data()
+
+
+preprocess = [
+    ("var-thresh",VarianceThreshold())
+]
 
 # Define preprocessors
 preprocess = [
@@ -250,12 +287,13 @@ preps = [preprocess, preprocess_pca,preprocess_anova]
 search_space = [
         {"clf": [LogisticRegression(multi_class = 'ovr',
                                     penalty = 'l2')],
-         "clf__C": [10**(-2),1,10**2],
+         "clf__C": [10**(-i) for i in range(-1,4)],
          "clf__max_iter":[5000,10000]},
         {"clf": [svm.SVC(kernel='linear',
                          decision_function_shape = 'ovr')],
-         "clf__C": [10**(-2),1,10**2],
-         "clf__max_iter":[5000,10000]
+         "clf__C": [10**(-i) for i in range(-1,4)],
+         "clf__max_iter":[5000,10000],
+         "clf__tol":[1e-4]
         }
 ]
 
@@ -267,9 +305,33 @@ for prep,name,csv_name in zip(preps,names,csv_names):
     # Classificator is a placeholder, will be changed
     model_pipe = Pipeline(prep + [('clf',LogisticRegression())])
     print("Realizando la búsqueda en el espacio dado de modelos lineales con {}...".format(name), flush = True)
-    best = gridSearch(model_pipe,search_space,csv_name)
+    best = gridSearch(X_train_rem,y_train_rem,model_pipe,search_space,csv_name)
     print_best(best)
     best_performers.append(best)
-    
-    
-    
+
+b = 0
+for i in range(1,len(best_performers)):
+    if best_performers[i].best_score_ > best_performers[b].best_score_:
+        b = i
+
+
+
+best_model = best_performers[b].best_estimator_
+#best_model = Pipeline(preprocess + [('clf',svm.SVC(kernel='linear',decision_function_shape = 'ovr',C = 1))])
+
+print("Entrenando el mejor modelo en el conjunto de entrenamiento completo...")
+best_model.fit(X_train,y_train)
+print("Prediciendo etiquetas en el conjunto de test...")
+
+
+print("-----------------------------------------")
+print("-----------------------------------------")
+print("------ RESULTADOS FINALES EN TEST -------\n")
+pred_y_test = best_model.predict(X_test)
+print(classification_report(y_test,pred_y_test))
+
+
+
+
+confusion_matrix(best_model, X_test, y_test)
+

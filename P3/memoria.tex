@@ -217,7 +217,7 @@ Trataremos primero el problema de regresión y posteriormente el de clasificaci�
 
 Lo primero que debemos hacer es realizar una buena comprensión de la información que tenemos sobre los datos para comprender un poco más nuestro problema.
 
-Nuestro primer conjunto de datos, \cite{superdata}, contiene características de ciertos elementos superconductores. Junto con estas características, se nos presenta una \emph{temperatura crítica}, que en \cite{hamidieh} lo denominan $T_c$ siendo un problema similar al que vamos a abordar, obtenida para un superconductor que posea estas características. También se nos presenta un archivo en el que se nos dan las fórmulas químicas de los superconductores, pero este archivo no será relevante para nosotros.
+Nuestro primer conjunto de datos, \cite{superdata}, contiene características de ciertos elementos superconductores. Junto con estas características, se nos presenta una \emph{temperatura crítica}, que en \cite{hamidieh}, el paper en el que se explica cómo se han extraido los datos la denominan $T_c$, obtenida para un superconductor que posea estas características. También se nos presenta un archivo en el que se nos dan las fórmulas químicas de los superconductores, pero este archivo no será relevante para nosotros.
 
 Las características que obtenemos para este problema han sido generadas utilizando diferentes técnicas aplicadas a cada dato que se tenía inicialmente. Algunos de estos datos son su masa atómica, la energía requerida para ionizar el átomo, la densidad, la afinidad a nuevos electrones, temperatura de fusión, conductividad termal y la valencia del compuesto. Usando estos datos, se realizan una serie de transformaciones sobre estos valores para obtener el conjunto de datos final, limpiándolos durante el proceso de preparación, lo cual nos da unos datos con pocos errores o datos inútiles (se eliminan repetidos o aquellos que tengan $T_c = 0$).
 
@@ -260,11 +260,13 @@ Dibujamos ahora un gráfico en el que mostramos el diagrama de caja de los posib
   \centering
   \includegraphics[scale = 0.4]{boxplot_y.pdf}
   \caption{Diagrama de caja de las temperaturas $T_c$ en el conjunto de entrenamiento.}
+  \label{fig:box-plot}
 \end{figure}
 
-Podemos ver que tenemos una variabilidad razonablemente amplia en los valores que toma $f$. Sin embargo, se observa que la mayoría de los valores de $f$ están concentrados en el intervalo $[0,50]$, pero también tenemos valores que se alejan bastante de este intervalo. Esto nos podría indicar que nuestra muestra está sesgada, en el sentido de que no tenemos muchos puntos $x_i$ en nuestro dataset que nos den valores altos de la temperatura $T_c$.  Como podemos ver, tenemos un dato que se aleja mucho de $1.5$ por el rango intercuartílico, que es lo que representan los \emph{bigotes} del diagrama de caja. Es por ello que podemos decir que este punto es posiblemente un \emph{outlier}.
+Podemos ver que tenemos una variabilidad razonablemente amplia en los valores que toma $f$. Sin embargo, se observa que la mayoría de los valores de $f$ están concentrados en el intervalo $[0,50]$, pero también tenemos valores que se alejan bastante de este intervalo. Esto nos podría indicar que nuestra muestra está sesgada, en el sentido de que no tenemos muchos puntos $x_i$ en nuestro dataset que nos den valores altos de la temperatura $T_c$.  Como podemos ver, tenemos un dato que se aleja mucho de $1.5$ por el rango intercuartílico, que es lo que representan los \emph{bigotes} del diagrama de caja. Es por ello que podemos decir que este punto es posiblemente un \emph{outlier}. Al tener muchos valores concentrados en una pequeña zona, es posible que esa zona quede mejor ajustada que cuando nos alejemos de ella para irnos a valores de $T_c$ más grandes.
 
 Además, se ha tratado de encontrar si hay características que ofrezcan una desviación típica muy baja y que por ello pudieran no tener utilidad a la hora de entrenar nuestro modelo o hacer cálculos. Sin embargo, hemos encontrado que no hay ninguna característica con una desviación típica menor de $0.05$, por lo que no eliminamos por este criterio ninguna columna de nuestros datos.
+
 
 
 \subsection{La clase de funciones $\mathcal H$. }
@@ -360,7 +362,11 @@ Tras aplicar el análisis de componentes principales, conseguimos que en nuestro
 \end{figure}
 
 
-Sin embargo, quedarnos con tan pocas variables no nos asegura que el modelo entrenado con estas variables vaya ser mejor que el modelo entrenado con todas las variables.  Es por ello que cuando entrenemos, tomaremos para entrenar modelos con los datos reducidos en dimensionalidad y sin reducir.
+Sin embargo, quedarnos con tan pocas variables no nos asegura que el modelo entrenado con estas variables vaya ser mejor que el modelo entrenado con todas las variables.  Es por ello que cuando entrenemos v amos a tomar dos copias del conjunto de entrenamiento:
+\begin{itemize}
+\item A una de ellas le aplicaremos únicamente la estandarización como preprocesado.
+  \item A la otra, aplicaremos primero estandarización, luego le aplicaremos PCA para eliminar las variables que puedan sobrar (explicando el $95\%$ de la varianza del conjunto), y por último volvermos a estandarizar pues al aplicar PCA la estandarización puede perderse.
+ \end{itemize}
 
 Además, hay que comentar que se ha tratado de detectar \textbf{outliers} en nuestro conjunto usando \lstinline{IsolationForest} de \lstinline{sklearn}, pero el número de outliers encontrado era despreciable así que no se han eliminado del conjunto de entrenamiento.
 
@@ -421,7 +427,7 @@ En ambos casos, estamos añadiendo a la pérdida una penalización multiplicada 
 
 La diferencia entre ambas es que en la regularización $L_1$ ayuda a seleccionar variables eliminando aquellas que tienen menos relevancia. La $L_2$ funciona mejor cuando se piensa que todas las variables son relevantes para la predicción. Además, el término que ésta introduce es diferenciable lo cual tiene ventajas computacionales. 
 
-En este caso ya habíamos tratado de seleccionar las características que mejor explicasen la varianza del conjunto mediante PCA. Es por todo ello que elegimos usar la regularización $L_2$ en este problema. Como el número de parámetros a entrenar no es muy elevado, se ha decidido optar también por ampliar nuestras opciones en la búsqueda del mejor modelo y usar \textbf{también} esta regularización sobre el total de las características. 
+Sabemos que tenemos dos conjuntos de transformaciones que aplicaremos a nuestros datos. En uno ya hemos tratado de seleccionar las mejores características para entrenar nuestro modelo, y en el otro pensamos que todas las características serán relevantes. Es por ello que en este caso, usaremos la regularización $L_2$ para ajustar nuestros modelos.
 % https://medium.com/analytics-vidhya/l1-vs-l2-regularization-which-is-better-d01068e6658c
 
 \subsubsection{Parámetros de búsqueda.}
@@ -519,7 +525,7 @@ Comparando los dos casos que hemos planteado para la búsqueda del mejor modelo,
 $$
 g = \text{Ridge}(alpha = 0.1, max\_iter = 5000).
 $$
-Hay que destacar en los resultados que , cuando se utiliza preprocesamiento de los datos usando también PCA, el modelo que mejor resultados obtiene es el mismo. Esto nos puede indicar que, aunque estemos intentando mantener una gran cantidad de información explicada reduciendo las características, reducir las características nos está haciendo perder información sobre cómo se relacionan estas con la función $f$ que tenemos que aproximar, pero este sigue siendo el mejor modelo a aplicar para estos datos.
+Hay que destacar en los resultados que , cuando se utiliza preprocesamiento de los datos usando también PCA, el modelo que mejor resultados obtiene es el mismo (\lstinline{Ridge}). Esto nos puede indicar que, aunque estemos intentando mantener una gran cantidad de información explicada reduciendo las características, reducir las características nos está haciendo perder información sobre cómo se relacionan estas con la función $f$ que tenemos que aproximar, pero este sigue siendo el mejor modelo a aplicar para estos datos.
 
 La regresión usando \lstinline{Ridge} ha dado los mejores resultados aún variando un poco los parámetros. Se observa que para cualquier valor que se le proporcione de constante de regularización $\lambda$ (alpha según \lstinline{sklearn}), se obtienen errores en validación cruzada muy similares. 
 
@@ -529,7 +535,7 @@ Además, se ha optado por usar este método de regresión porque es el que menor
 
 Más información sobre los valores obtenidos para cada conjunto de parámetros fijo en cada uno de los algoritmos de minimización del error se puede observar en el apéndice \ref{apend:regresion} que se ha incluido para evitar rellenar el documento con tablas.
 
-Mirando las tablas, podemos observar que en general el regresor que aplica la regularización de forma directa (\lstinline{Ridge}), ha obtenido resultados muchos mejores mientras que \lstinline{SGDRegressor} le ocurre que en algunos valores de $\lambda$ y formas de actualizar $\eta$, obtiene errores en cross validation demasiado grandes. Esto es posiblemente porque necesite un número de iteraciones muchísimo más alto para encontrar una recta de regresión que aproxime nuestros datos al nivel que lo hacen los demás aproximadores. Además, con algunos valores de estos mismos parámetros, el algoritmo no es capaz hacer qeu el error se aproxime al mínimo que sabemos que podemos obtener con otros parámetros.
+Mirando las tablas, podemos observar que en general el regresor que aplica la regularización de forma directa (\lstinline{Ridge}), ha obtenido resultados muchos mejores mientras que \lstinline{SGDRegressor} le ocurre que en algunos valores de $\lambda$ y formas de actualizar $\eta$, obtiene errores en cross validation demasiado grandes. Esto es posiblemente porque necesite un número de iteraciones muchísimo más alto para encontrar una recta de regresión que aproxime nuestros datos al nivel que lo hacen los demás aproximadores. Además, con algunos valores de estos mismos parámetros, el algoritmo no es capaz hacer que el error se aproxime al mínimo que sabemos que podemos obtener con otros parámetros.
 
 \subsection{Error final fuera de la muestra.}
 
@@ -539,8 +545,8 @@ Para obtener el error fuera de la muestra final, el proceso realizado ha sido si
 
 Se calculan entonces el error cuadrático medio en el conjunto de test y el coeficiente de determinación $R^2$ y obtenemos lo siguiente.
 
-\begin{lstlisting}[language=Python]
 
+\begin{lstlisting}[language=Python]
   ------ RESULTADOS FINALES EN TEST -------
 
 	- MSE: 313.4691035257312
@@ -553,6 +559,21 @@ Como se puede observar, el error cuadrático medio en el conjunto de test no suf
 
 
 En cuanto al coeficiente de determinación, vemos que obtenemos un valor de $0.73$. Sabiendo que esto se interpreta como que alrededor del $73\%$ de los datos caen sobre la recta de regresión, podemos afirmar que nuestra recta se encuentra ciertamente lejos de ser capaz de predecir con precisión los nuevos puntos que podamos encontrarnos.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.55\linewidth]{media/residues_error.pdf}
+  \caption{Gráfico con las etiquetas reales y las predichas por nuestro regresor en el conjunto de test. }
+  \label{fig:noise-reg}
+\end{figure}
+
+Si nos fijamos en la figura \ref{fig:noise-reg}, podemos ver en el eje $x$ los valores reales que tienen las etiquetas del conjunto de test, y en el eje $y$ las etiquetas que nuestro modelo ha predicho. Lo ideal sería que estas etiquetas estuviesen todas sobre la función identidad, aunque vemos que no es así. En la zona de valores bajos de $y$, donde ya habíamos visto en el diagrama de caja (Figura \ref{fig:box-plot}) que es donde más valores de la etiqueta $y$ se concentran), nuestro modelo aproxima mejor la verdadera función $f$ que se pretende modelar. Sin embargo, conforme aumenta el valor real de la etiqueta $y$, se nos hace difícil de predecir ese valor. Esto es algo que habíamos predicho cuando se observaba el diagrama de caja, pero que ahora se nos hace una realidad. 
+
+\subsection{Conclusiones.}
+
+Como conclusión, hemos visto que hemos conseguido un modelo que, aunque obtenga un error cuadrático medio razonablemente alto, es capaz de mantener ese error fuera de la muestra de entrenamiento, lo cual nos indica que \textbf{generaliza de forma razonablemente buena}.
+
+Hemos visto también que en nuestros dos conjuntos de entrenamiento (uno con más preprocesado que otro) se obtienen resultados bastante diferentes. Realizar la selección de componentes usando PCA sin hacer ninguna transformación después nos lleva a perder capacidad de explicar nuestro conjunto. A esto, hay que sumarle que el MSE es bastante lejano a cero comparado con los valores de las etiquetas, por lo que podemos afirmar que el modelo lineal no es el mejor para ajustar estas características, y para haber obtenido resultados mejores habría que haber realizado transformaciones más serias sobre los datos como transfomraciones polinómicas sobre las características, o usar un modelo no lineal para estos datos. 
 
 \newpage
 
@@ -641,13 +662,20 @@ Es conveniente ver también si existen correlaciones entre las variables que ten
   \centering
   \includegraphics[width=0.55\linewidth]{media/corr-standarized-classification.pdf}
   \caption{Matriz de correlaciones del conjunto de entrenamiento. }
-  \label{fig:class-numbers}
+  \label{fig:corr-class}
 \end{figure}
 
 Podemos ver con mucha claridad que hay zonas , por ejemplo entre la variable $~18$ y la $~24$ que están completamente correladas. Al igual que esa, existen otros conjuntos de variables que tienen una correlación perfecta, cosa que no nos ocurría con tanta claridad.
 
 Sin embargo, sabemos que correlación no siempre indica causalidad como nos ocurría en el caso anterior, así que tendremos que estudiar si reducir algunas de estas características puede llevarnos a mejores resultados a la hora de entrenar nuestro modelo.
 
+Por último, hay que comentar que se ha hecho una \textbf{búsqueda de outliers} en el \textbf{conjunto de entrenamiento}, y el resultado es:
+\begin{lstlisting}[language=bash]
+  There are 2815 outliers.
+  Outliers represent:6.873229807598398 percent, so they will be eliminated
+\end{lstlisting}
+
+Como el conjunto de datos es suficientemente grande, se considera que el $~7\%$ de los datos no es una gran cantidad de datos para entrenar, y sin embargo podría ayudarnos a que el modelo obtenga mejores resultados. Es por ello que desde el primer momento, se eliminan estos outliers y se decide continuar todo el proceso sin estos datos.
 
 \subsection{La clase de funciones $\mathcal H$.}
 
@@ -678,7 +706,7 @@ Igual que en el caso de regresión, no tenemos información suficiente para just
 
 En este caso, de nuevo tenemos todos los datos en un único fichero que tenemos que dividir nosotros. Optamos por volver a realizar una partición de $70\%$ para el conjunto de entrenamiento y $30\%$ para el conjunto de test.
 
-También volveremos a utilizar en el entrenamiento $K-$\emph{Fold cross validation}, aunque en este caso es más relevante el hecho de que esta división sea estratificada, para mantener la distribución por clases de nuestro conjunto en cada una de las particiones y tener representantes de todas las clases en todos los subconjuntos y que estos no queden sesgados de cara al entrenamiento.
+También volveremos a utilizar en el entrenamiento $K-$\emph{Fold cross validation}, (considerando $k=5$) aunque en este caso es más relevante el hecho de que esta división sea estratificada, para mantener la distribución por clases de nuestro conjunto en cada una de las particiones y tener representantes de todas las clases en todos los subconjuntos y que estos no queden sesgados de cara al entrenamiento.
 
 \subsection{Preprocesado de datos. Selección de modelos.}
 
@@ -692,7 +720,7 @@ Además de esta selección de características previa, realizamos también prime
 
 \subsubsection{Selección de modelos.}
 
-Se han estudiado en la teoría diferentes modelos que podríamos aplicar a este problema. Sabemos que buscaremos modelos lineales que nos darán hiperplanos que separen los datos. Tenemos una selección variada de algoritmos que podríamos utilizar para encontrar el hiperplano que mejor ajuste nuestros datos, como \lstinline{PLA-Pocket, LogisticRegression, Hard/Soft SVM ...}. En este caso, vamos a escoger poner a competir los resultados de \textbf{Regresión Logística} con los resultados de \textbf{SVM}(Support Vector Machine). Recordamos que en ambos tendremo que usar \emph{one-vs-all} para extrapolar la clasificación binaria que nos dan estos métodos al caso multietiqueta.
+Se han estudiado en la teoría diferentes modelos que podríamos aplicar a este problema. Sabemos que buscaremos modelos lineales que nos darán hiperplanos que separen los datos. Tenemos una selección variada de algoritmos que podríamos utilizar para encontrar el hiperplano que mejor ajuste nuestros datos, como \lstinline{PLA-Pocket, LogisticRegression, Hard/Soft SVM ...}. En este caso, vamos a escoger poner a competir los resultados de \textbf{Regresión Logística} con los resultados de \textbf{SVM}(Support Vector Machine). Recordamos que en ambos tendremos que usar \emph{one-vs-all} para extrapolar la clasificación binaria que nos dan estos métodos al caso multietiqueta.
 
 Regresión logística ya ha sido explicado en cierta profundidad en una de las prácticas anteriores \cite{saez_fjsaezmml_2021} y omitimos por ello su explicación.
 
@@ -705,7 +733,7 @@ Comentamos brevemente el funcionamiento de los \lstinline{SVM} y por qué los el
 \end{cases}
 \]
 
-En este caso, $C$ es el nivel de penalización que queremos darle a los puntos que atraviesen este margen. Se elige este algoritmo porque al escoger el mejor margen, se trata de hacer que la generalización sea lo mejor posible y además nuestro hiperplano sea más robusto si existe ruido cercano al hiperplano.
+En este caso, $C$ es la importancia que le queremos dar a la penalización que queremos darle a los puntos que atraviesen este margen, se puede ver por tanto como el parámetro de regularización. Se elige este algoritmo porque al escoger el mejor margen, se trata de hacer que la generalización sea lo mejor posible y además nuestro hiperplano sea más robusto si existe ruido cercano al hiperplano. Para la implementación de este modelo usamos la de \lstinline{sklearn}, que es \lstinline{svm.SVC}, que implementa un clasificador con vectores de soporte, al cual tenemos que darle el parámetro \lstinline{kernel='linear'} para forzar a que el clasificador sea lineal, pues de lo contrario no sería un modelo lineal.
 
 
 
@@ -736,19 +764,176 @@ Usaremos el \emph{accuracy} del modelo como función a maximizar en la búsqueda
   \]
   \item \lstinline{f1_score}, que es una media ponderada de las dos anteriores. Sabemos que $F1 \in [0,1]$, siendo $1$ el mejor valor y $0$ el peor. Se expresa como:
   \[
-  F1(y\_true,y\_pred) = 2\frac{\operatorname{precision}\dot \operatorname{recall}}{\operatorname{precision} + \operatorname{recall}}
-  }
+  F1(y\_true,y\_pred) = 2 \left(\frac{ \operatorname{precision}\cdot \operatorname{recall} }{ \operatorname{precision} + \operatorname{recall} }\right)
   \]
-  A mayor valor de esta métrica, mejores valores estamos obteniendo de precisión y \emph{recall}
+  A mayor valor de esta métrica, mejores valores estamos obteniendo de precisión y \emph{recall}, por lo que resume las dos anteriores. Sin embargo, nos indica también si las dos tienen valores altos, pues si una tiene valor alto y la otra bajo, el valor de $F1-score$ será también bajo.
 \end{enumerate}
 
 \subsection{Regularización y parámetros del modelo.}
 
+Como ya hemos comentado y observado en el caso de regresión, la regularización es bastante importante en el proceso de buscar el óptimo en cada uno de nuestros problemas. En este caso, tras haber explicado anteriormente los tipos de regularización más importantes, decidimos optar de nuevo por usar regularización de tipo $L_2$, pues en todos los casos se considera que todas las variables son importantes y no queremos en principio hacer una selección más fuerte de ninguna de ellas, cosa que haríamos si aplicásemos $L_1$.
+
+\subsubsection{Parámetros del modelo.}
+
+En este problema volveremos a definir un espacio de búsqueda de parámetros y dejaremos la tarea de buscar los mejores parámetros a \lstinline{GridSearchCV}. Comentamos los parámetros que se han escogido para la búsqueda:
+
+\begin{itemize}
+
+\item El parámetro de regularización, que en este caso se denomina $C$ y la potencia de la regularización es inversamente proporcional a $C$.
+
+\item El número de iteraciones, que de nuevo elegimos tomar entre los valores $\{5000,10000\}$, aunque parecen más que de sobra pues obtenemos en numerosas ocasiones que el modelo ha terminado de entrenar antes de ese número de iteraciones.
+  \item La \emph{tolerancia} es reducida a $1e-4$ en el caso del SVM, pues se trata de encontrar una solución mejor y que no se pare antes del número de iteraciones dado.
+
+\end{itemize}
+
+
+
+
 \subsection{Selección de hipótesis.}
 
-\subsection{Error final fuera de la muestra.}
+Tras explicar los parámetros, vamos a poner a competir los modelos en los diferentes conjuntos de datos preprocesados para ver cuál de ellos nos ofrece mejores resultados. En este caso, se crean tres \lstinline{Pipelines} de preprocesamiento, siendo los dos siguientes los no triviales:
 
 
+
+\begin{minipage}{\textwidth}
+  \begin{parcolumns}{2}
+    \colchunk{\begin{lstlisting}[caption=PCA,language=Python]{Name}
+        preprocess_pca = [ 
+          ("pre-standardize", StandardScaler()),
+          ("PCA", PCA(n_components = 0.95)),
+          ("standardize",StandardScaler()),
+          ("var-thresh",VarianceThreshold())]
+    \end{lstlisting}}
+
+    \colchunk{\begin{lstlisting}[caption=ANOVA,language=Python]{Name}
+        preprocess_anova = [
+          ("pre-standardize", StandardScaler()),
+          ("ANOVA", SelectKBest(score_func=f_classif, k=24)),
+          ("standardize",StandardScaler()),
+          ("var-thresh",VarianceThreshold())]
+    \end{lstlisting}}
+
+    \colplacechunks
+  \end{parcolumns}
+\end{minipage}
+
+A estos dos hay que añadirles , como ya hemos comentado, el que solo estandariza los datos, que es el mismo que se usa en regresión. Con estos \emph{pipelines} de preprocesado de datos, ejecutamos la búsqueda por el \emph{grid} y obtenemos los siguientes mejores resultados con cada uno de los preprocesados:
+
+\begin{minipage}{\textwidth}
+  \begin{parcolumns}{3}
+    \colchunk{\begin{lstlisting}[caption=Estandarizacion]{Name}
+        ----- Mejor clasificador lineal encontrado ------
+        - Parametros:
+        SVC(C=0.1, kernel='linear', max_iter=10000, tol=0.0001)
+        - Accuracy en Cross Validation
+        0.9270076172098257
+    \end{lstlisting}}
+
+    \colchunk{\begin{lstlisting}[caption=PCA]{Name}
+        ----- Mejor clasificador lineal encontrado ------
+        - Parametros:
+        SVC(C=1, kernel='linear', max_iter=10000, tol=0.0001)
+        - Accuracy en Cross Validation
+        0.9175952226837361
+    \end{lstlisting}}
+
+    \colchunk{\begin{lstlisting}[caption=ANOVA]{Name}
+        ----- Mejor clasificador lineal encontrado ------
+        - Parametros:
+        SVC(C=0.1, kernel='linear', max_iter=10000, tol=0.0001)
+        - Accuracy en Cross Validation
+        0.9122727781683105
+       \end{lstlisting}}
+
+    \colplacechunks
+  \end{parcolumns}
+\end{minipage}
+
+Los resultados nos muestran que los mejores resultados, al igual que en el problema de regresión, se obtienen cuando a nuestros datos sólamente se les aplica \textbf{estandarización}. El modelo con mejores resultados es el SVM (que \lstinline{sklearn} llama SVC, de Support Vector Classifier), pues es el que obtiene un \lstinline{accuracy} más alto en cross validation. En concreto, los parámetros que nos dan el mejor resultado son:
+$$
+g = SVM(C=0.1, kernel='linear', max\_iter=10000, tol=0.0001)
+$$
+obteniendo un $92.7\%$ de acierto en validación cruzada.
+
+Se observa también que en los modelos que optan por reducir características, los mejores parámetros y el mejor modelo sigue siendo el mismo, reafirmando el resultado de que el mejor clasificador para el conjunto de datos con los preprocesados propuestos es este.
+
+Vemos que la \textbf{constante de regularización} obtenida $C$ es $0.1$, y como esta es la inversa de la \emph{potencia} que tiene el regularizado, obtenemos que la regularización hace una tarea importante a la hora de quedarnos con los mejores pesos para ajustar nuestra muestra. Además, se necesitan también el máximo de \textbf{iteraciones} propuesto para encontrar este resultado. Esto es sorprendente, pues en numerosas ocasiones en la búsqueda en el \emph{grid} de parámetros, se ha obtenido que el algoritmo converge en un número de iteraciones inferior a $10000$ y la consola nos muestra un \emph{warning}.
+
+
+Podemos observar más información sobre los resultados obtenidos por cada uno de los modelos en el apéndice \ref{apend:clas} incluido después de las tablas de regresión.
+
+Observando estas tablas, se puede ver que la regresión logística queda muy por debajo en cuanto a calidad de clasificación que SVM sea cual sea el preprocesado que se utilice de los propuestos. De hecho, el mejor resultado que se logra obtener es un $76\%$ de acierto en validación cruzada con un valor de regularización alto ($10$) en comparación con el resto que son inferiores a $1$. Es por ello que podemos indicar a partir de estos resultados que o bien este modelo no es tan adecuado para clasificar los datos de nuestro conjunto de datos, o bien el preprocesamiento que hemos hecho a los datos no ha sido el adecuado para extraer las mejores características de nuestros datos y que el algoritmo de regresión logística maximice la el \emph{accuracy}.
+
+Por otro lado, vemos también que SVM usando extracción de características alcanza valores cercanos al máximo de \emph{accuracy} (que ya hemos comentado que lo alcanza con el preprocesado básico). De hecho, la diferencia es de menos de un $1\%$ en el mejor resultado de ambos preprocesados (PCA,ANOVA).
+
+
+
+\subsection{Error final fuera de la muestra. Estimación del error.}
+
+Visto todo lo anterior y seleccionada nuestra hipótesis final $g$, nos quedaría entrenar este modelo SVM sobre el conjunto de datos completo y evaluar sobre el conjunto de test que apartamos desde antes de empezar a explorar los datos.
+
+Tras entrenar el modelo sobre el conjunto de entrenamiento completo, evaluamos los resultados en el conjunto de test con la función \lstinline{classification_report(y_test,y_pred)} que nos proporciona \lstinline{sklearn}, y nos proporciona la siguiente tabla:
+
+\begin{table}[H]
+  \centering
+\begin{tabular}{rrrrr}
+\multicolumn{1}{l}{Class} & Precision & Recall & F1-score & Support \\ \hline
+1                         & 0.94      & 0.97   & 0.95     & 1611    \\
+2                         & 0.88      & 0.9    & 0.89     & 1554    \\
+3                         & 0.97      & 0.97   & 0.97     & 1565    \\
+4                         & 0.97      & 0.98   & 0.98     & 1618    \\
+5                         & 0.89      & 0.81   & 0.85     & 1603    \\
+6                         & 0.87      & 0.84   & 0.85     & 1577    \\
+7                         & 1         & 1      & 1        & 1614    \\
+8                         & 0.85      & 0.92   & 0.88     & 1588    \\
+9                         & 0.89      & 0.88   & 0.89     & 1610    \\
+10                        & 0.91      & 0.89   & 0.9      & 1653    \\
+11                        & 1         & 1      & 1        & 1560    \\
+                          &           &        &          &         \\
+accuracy                  &           &        & 0.92     & 17553   \\
+macro avg                 & 0.92      & 0.92   & 0.92     & 17553   \\
+weighter avg              & 0.92      & 0.92   & 0.92     & 17553  
+\end{tabular}
+
+\caption{Reporte de clasificación del mejor modelo obtenido, prediciendo en el conjunto de test.}
+\end{table}
+
+Como vemos, se nos proporciona un resultado de precision, recall y f1-score por clase, y también una columna \emph{support}, que nos indica el número de ejemplos que teníamos por cada clase. Los resultados interesantes quedan al final, donde en la fila \lstinline{macro avg} se nos dan las medias de las medidas anteriores. Podemos ver que nuestro modelo:
+
+\begin{enumerate}
+\item Como tiene un $92\%$ de precisión, significa que tiene aproximadamente un $92\%$ de probabilidad de clasificar bien un positivo, es decir, de no marcar un positivo un elemento que no lo sea. Esto nos indica que si el modelo nos indica que un elemento es de una clase, hay poca probabilidad de que esté equivocado.
+
+\item Como tiene un $92\%$ de \emph{recall}, aproximadamente un $8\%$ de elementos que deberían ser positivos no son marcados como positivos.
+
+  \item Finalmente, un $92\%$ de \lstinline{F1-score} , lo cual no es una sorpresa habiendo visto cómo se calcula este y cuáles son los valores de los dos anteriores. En general, este valor nos indica que nuestro modelo es razonablemente bueno ajustando nuestros datos.
+\end{enumerate}
+
+Tras haber remarcado los resultados sobre métricas que usan verdaderos positivos, falsos positivos y falsos negativos, podemos también ver el resultado que nos ofrece la \textbf{matriz de confusión}. Esta matriz nos indica cómo han sido clasificados los elementos de cada clase. El resultado es el siguiente:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.60\linewidth]{media/confusion.pdf}
+  \caption{Matriz de confusión de nuestro mejor modelo en el conjunto de test. }
+  \label{fig:confusion}
+\end{figure}
+
+Como podemos observar, por lo general nuestro modelo clasifica bien la mayoría de las clases. El problema mayor lo tendríamos en la clase número $5$, en la que ha clasificado más de $250$ elementos como si fuesen de la clase número $8$. También podemos ver sin embargo que clases como la número 11 son perfectamente clasificadas, o que hay clases como la $2$ y la $10$, que son clasificadas la una como la otra y viceversa. Esto podría indicar que las características de ambas clases deben ser bastante parecidas y estos elementos están cercanos los unos de los otros.
+
+\subsubsection{Estimación del error.}
+
+Ya sabemos que el error de validación cruzada es un buen estimador del error fuera de la muestra. Además, sabemos que podemos esperar que , en general, $E_{out} \leq E_{cv}$ aunque no esté garantizado. La mejor medida que podemos dar de $E_{out}$ en este caso es $E_{test}$, pues el conjunto de \emph{test} no ha sido usado en ninguna de las fases de entrenamiento ni exploración de los datos, así que podemos decir que nos da una buena aproximación del error fuera de la muestra.
+
+Podemos también aplicar la \emph{cota de Hoeffding} que hemos visto en teoría para el error en el conjunto de test. Si fijamos $\sigma = 0.05$, podemos decir que:
+\[
+E_{out}(g) \leq E_{test}(g) + \sqrt{\frac{1}{2 N_{test}} \log{2}{\sigma}} = 0.08 + \sqrt{\frac{1}{2*17553} \log\frac{2}{0.05}} \approx 0.090250
+\]
+\textbf{con una probabilidad del $95\%$}. El resultado obtenido no es mucho mayor que el error en el conjunto de test, debido también al gran número de datos que tenemos para este conjunto de datos.
+
+\subsection{Conclusiones.}
+
+En términos generales, podemos decir que hemos logrado encontrar un modelo que sea capaz de dar una clasificación competente de nuestros datos y que no se queda ahí sino que además es capaz de generalizar bien desde los datos de entrenamiento y obtener un resultado prácticamente idéntico cuando se predicen los datos que se han dejado fuera de la muestra de entrenamiento.
+
+Se observa que la extracción de características por sí sola no ha aportado información relevante al modelo, sino que de hecho se ha perdido (aunque poca) la suficiente para hacer que el modelo mejore. Sin embargo, ya que extraer características nos ha hecho no perder mucha información sobre la muestra, posiblemente si se hubiesen introducido transformaciones polinómicas sobre nuestros datos se podría haber conseguido un mejor ajuste de la muestra sin exponernos a que el \emph{overfitting} sea demasiado grande.
 
 \newpage
 \printbibliography
@@ -762,7 +947,7 @@ Usaremos el \emph{accuracy} del modelo como función a maximizar en la búsqueda
 
 Se incluyen las tablas con los resultados de los modelos para el problema de regresión. Se incluye una tabla con el preprocesado de solo estandarización y otra con estandarización y PCA.
 
-\begin{table}[h!]
+\begin{table}[H]
   \centering
 \begin{tabular}{lrlrr}
 Regressor                        & $\lambda$ & $\eta$   & $max\_iter$ & $E_{cv}$                \\ \hline
@@ -803,7 +988,7 @@ SGDRegressor                     & 0.10000   & constant & 5000        & 636.9379
 \end{table}
 
 
-\begin{table}[h!]
+\begin{table}[H]
   \centering
 \begin{tabular}{lrlrr}
 Regressor    & $\lambda$ & $\eta$   & $max\_iter$ & $E_{cv}$  \\ \hline
@@ -842,4 +1027,92 @@ Ridge        & 0.10000   &          & 5000        & 467.96851 \\
 \end{tabular}
 \caption{Resultados obtenidos según los parámetros usando estandarización y PCA.}
 \end{table}
+
+\subsection{Resultados de los modelos en clasificación}
+\label{apend:clas}
+
+\begin{table}[H]
+  \centering
+\begin{tabular}{lrrrr}
+Model              & $C$      & $\max_iter$ & Tolerance & Accuracy \\ \hline
+LogisticRegression & 10.00000 & 5000        &           & 0.75994  \\
+                   & 10.00000 & 10000       &           & 0.75994  \\
+                   & 1.00000  & 5000        &           & 0.75339  \\
+                   & 1.00000  & 10000       &           & 0.75339  \\
+                   & 0.10000  & 5000        &           & 0.74974  \\
+                   & 0.10000  & 10000       &           & 0.74974  \\
+                   & 0.01000  & 5000        &           & 0.73053  \\
+                   & 0.01000  & 10000       &           & 0.73053  \\
+                   & 0.00100  & 5000        &           & 0.66658  \\
+                   & 0.00100  & 10000       &           & 0.66658  \\
+\textbf{SVM}       & 10.00000 & 5000        & 0.00010   & 0.74552  \\
+                   & 10.00000 & 10000       & 0.00010   & 0.77940  \\
+                   & 1.00000  & 5000        & 0.00010   & 0.89384  \\
+                   & 1.00000  & 10000       & 0.00010   & 0.92276  \\
+                   & 0.10000  & 5000        & 0.00010   & 0.92661  \\
+& \textbf{0.10000}  & \textbf{10000}  & \textbf{0.00010}   & \textbf{0.92701}  \\
+                   & 0.01000  & 5000        & 0.00010   & 0.91031  \\
+                   & 0.01000  & 10000       & 0.00010   & 0.91028  \\
+                   & 0.00100  & 5000        & 0.00010   & 0.83050  \\
+                   & 0.00100  & 10000       & 0.00010   & 0.83050 
+\end{tabular}
+\caption{Resultados de los modelos en clasificación usando solo estandarización.}
+\end{table}
+
+\begin{table}[H]
+  \centering
+\begin{tabular}{lrrrr}
+Model              & $C$      & $max\_iter$ & Tolerance & Accuracy \\ \hline
+LogisticRegression & 10.00000 & 5000        &           & 0.74070  \\
+                   & 10.00000 & 10000       &           & 0.74070  \\
+                   & 1.00000  & 5000        &           & 0.74104  \\
+                   & 1.00000  & 10000       &           & 0.74104  \\
+                   & 0.10000  & 5000        &           & 0.74175  \\
+                   & 0.10000  & 10000       &           & 0.74175  \\
+                   & 0.01000  & 5000        &           & 0.72465  \\
+                   & 0.01000  & 10000       &           & 0.72465  \\
+                   & 0.00100  & 5000        &           & 0.65588  \\
+                   & 0.00100  & 10000       &           & 0.65588  \\
+SVM                & 10.00000 & 5000        & 0.00010   & 0.74814  \\
+                   & 10.00000 & 10000       & 0.00010   & 0.80056  \\
+                   & 1.00000  & 5000        & 0.00010   & 0.90915  \\
+                   & 1.00000  & 10000       & 0.00010   & 0.91760  \\
+                   & 0.10000  & 5000        & 0.00010   & 0.91408  \\
+                   & 0.10000  & 10000       & 0.00010   & 0.91424  \\
+                   & 0.01000  & 5000        & 0.00010   & 0.90053  \\
+                   & 0.01000  & 10000       & 0.00010   & 0.90053  \\
+                   & 0.00100  & 5000        & 0.00010   & 0.82517  \\
+                   & 0.00100  & 10000       & 0.00010   & 0.82517 
+\end{tabular}
+\caption{Resultados de los modelos en clasificación usando PCA.}
+\end{table}
+
+\begin{table}[H]
+  \centering
+\begin{tabular}{lrrrr}
+Model              & $C$      & $max\_iter$ & Tolerance & Accuracy \\ \hline
+LogisticRegression & 10.00000 & 5000        &           & 0.74070  \\
+                   & 10.00000 & 10000       &           & 0.74070  \\
+                   & 1.00000  & 5000        &           & 0.74104  \\
+                   & 1.00000  & 10000       &           & 0.74104  \\
+                   & 0.10000  & 5000        &           & 0.74175  \\
+                   & 0.10000  & 10000       &           & 0.74175  \\
+                   & 0.01000  & 5000        &           & 0.72465  \\
+                   & 0.01000  & 10000       &           & 0.72465  \\
+                   & 0.00100  & 5000        &           & 0.65588  \\
+                   & 0.00100  & 10000       &           & 0.65588  \\
+SVM                & 10.00000 & 5000        & 0.00010   & 0.74814  \\
+                   & 10.00000 & 10000       & 0.00010   & 0.80056  \\
+                   & 1.00000  & 5000        & 0.00010   & 0.90915  \\
+                   & 1.00000  & 10000       & 0.00010   & 0.91760  \\
+                   & 0.10000  & 5000        & 0.00010   & 0.91408  \\
+                   & 0.10000  & 10000       & 0.00010   & 0.91424  \\
+                   & 0.01000  & 5000        & 0.00010   & 0.90053  \\
+                   & 0.01000  & 10000       & 0.00010   & 0.90053  \\
+                   & 0.00100  & 5000        & 0.00010   & 0.82517  \\
+                   & 0.00100  & 10000       & 0.00010   & 0.82517 
+\end{tabular}
+\caption{Resultados de los modelos en clasificación usando ANOVA.}
+\end{table}
+
 \end{document}
